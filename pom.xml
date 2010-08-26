@@ -76,7 +76,7 @@
     <!-- TODO: Put these in lib and load in system scope, latest lwjgl isn't in any public maven repo -->
     
     <!-- Simplex3D - 3D Math -->
-    <!-- TODO -->
+    <!-- TODO: Put these in lib and load in system scope, simplex3d isn't in any public maven repo -->
 
   </dependencies>
 
