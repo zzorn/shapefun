@@ -11,5 +11,5 @@ class Mesh extends Node {
 
   def update() {}
 
-  def render() = null
+  def render() {}
 }
