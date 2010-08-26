@@ -3,15 +3,9 @@ package org.shapefun
 /**
  * 
  */
-class Mesh extends Node {
-
-  // TODO: Add vertex and add index functions
-  
-
-  def buildMesh() {} // TODO: Do we need? 
-
+class Camera extends Node {
   def update(secondsSinceLastUpdate: Float, secondsSinceStart: Float) {}
 
+
   def render() {}
-  
 }

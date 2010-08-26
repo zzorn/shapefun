@@ -7,7 +7,7 @@ import java.util.ArrayList
  */
 class CompositeNode extends Node {
 
-  private var _children = new ArrayList[Node]()
+  private val _children = new ArrayList[Node]()
 
   def add(node: Node) = _children.add(node)
   def remove(node: Node) = _children.remove(node)
@@ -16,14 +16,17 @@ class CompositeNode extends Node {
   def render() {
     var i = 0
     while (i < _children.size) {
-      _children.get(i).render
+      _children.get(i).render()
+      i += 1
     }
   }
 
-  def update() {
+
+  def update(secondsSinceLastUpdate: Float, secondsSinceStart: Float) {
     var i = 0
     while (i < _children.size) {
-      _children.get(i).update
+      _children.get(i).update(secondsSinceLastUpdate, secondsSinceStart)
+      i += 1
     }
   }
 

@@ -1,24 +1,32 @@
 package org.shapefun
 
+import simplex3d.math._ // Using primitive casting.
+import simplex3d.math.floatm.renamed._ // Using short names for Double data types.
+import simplex3d.math.floatm.FloatMath._ // Using all double functions.
+
 /**
  * 
  */
 
 trait Node {
 
+  val transformation = Mat4.apply(1)
+
   // TODO: Transformation matrix, function for changing pos, rotation, scale, etc
+
   // TODO: Bounding sphere (or box?)
   // TODO: Keep track of parent?
 
   /**
-   * For animation, mesh construction, etc
+   * Update any animations, mesh construction, etc
+   * @param secondsSinceLastUpdate number of seconds since update was called last, or since the game was initialized if this is the first call.
+   * @param secondsSinceStart number of seconds since the application started.
    */
-  // TODO: Pass in time since last call, and gametime / simulated time, and maybe real time
-  def update()
+  def update(secondsSinceLastUpdate: Float, secondsSinceStart: Float)
 
   /**
-   * For rendering the node with opengl calls.
+   * Render the node with opengl calls.
    */
-  // TODO: Pass in opengl object, and maybe screen
   def render()
+
 }

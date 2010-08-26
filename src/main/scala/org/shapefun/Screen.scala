@@ -22,7 +22,7 @@ class Screen(preferredWidth: Int = 800, preferredHeight: Int = 600, fullScreen: 
   def remove(node: Node) = root.remove(node)
   def clear() = root.clear
 
-  private var _title: String = getClass.getSimpleName
+  private var _title: String = getClass.getSimpleName.replace("$", "")
   def title: String = _title
   def title_= (newTitle: String) {
     _title = newTitle
@@ -86,7 +86,12 @@ class Screen(preferredWidth: Int = 800, preferredHeight: Int = 600, fullScreen: 
   }
 
   private final def doRender() {
+    glClearColor(0,0,0,0)
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
     render()
+
+    glFlush
   }
 
   final def stop() = running = false
@@ -122,7 +127,7 @@ class Screen(preferredWidth: Int = 800, preferredHeight: Int = 600, fullScreen: 
 
       Display.setDisplayMode(mode);
       Display.setFullscreen(fullScreen)
-      Display.setTitle(_title)
+      Display.setTitle(title)
       Display.setVSyncEnabled(true)
       Display.create()
       glClearColor(0, 0, 0, 0)
