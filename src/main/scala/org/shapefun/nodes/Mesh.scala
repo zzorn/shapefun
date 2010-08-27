@@ -5,6 +5,9 @@ import java.util.ArrayList
 
 import simplex3d.math._
 import simplex3d.buffer.{RawFloat, DataArray}
+import org.lwjgl.BufferUtils
+import org.lwjgl.opengl.{ARBVertexBufferObject, GLContext}
+import java.nio.IntBuffer
 // Using primitive casting.
 import simplex3d.math.floatm.renamed._ // Using short names for Double data types.
 import simplex3d.math.floatm.FloatMath._ // Using all double functions.
@@ -16,19 +19,21 @@ class Mesh extends Node {
 
   private var vertexCount = 0
   private var indexCount = 0
+  private var nextFreeIndex = 0
+  private var nextFreeVertex = 0
   private var vertexes: DataArray[Vec3, RawFloat] = null
   private var normals: DataArray[Vec3, RawFloat] = null
   private var textureCoordinates: DataArray[Vec2, RawFloat] = null
   private var colors: DataArray[Vec4, RawFloat] = null
   private var indexes: DataArray[Int, RawFloat] = null
 
+  var texture: TexturePart = null
+
   // TODO: Add vertex and add index functions
 
   def buildMesh() {} // TODO: Do we need?
 
   def update(secondsSinceLastUpdate: Float, secondsSinceStart: Float) {}
-
-  def render() {}
 
   def allocateBuffers(newVertexCount: Int, newIndexCount: Int) {
     if (vertexCount != newVertexCount) {
@@ -45,29 +50,19 @@ class Mesh extends Node {
     }
   }
 
-  private var nextFreeIndex = 0
 
   def clear() {
-    vertexes.clear
-    normals.clear
-    textureCoordinates.clear
-    colors.clear
-    indexes.clear
+    nextFreeVertex = 0
     nextFreeIndex = 0
   }
 
-  def render(texture: TexturePart = null) {
+  def render() {
 
-/*
-    if(GLContext.getCapabilities().GL_ARB_vertex_buffer_object) renderWithVbo(texture)
-    else renderWithDirectMode(texture)
-     */
-
-    renderWithDirectMode(texture)
-
+    if(GLContext.getCapabilities().GL_ARB_vertex_buffer_object) renderWithVbo()
+    else renderWithDirectMode()
   }
-/*
-  def renderWithVbo(texture: RenderImage) {
+
+  private def renderWithVbo() {
     def createVboId: Int = {
       val buffer: IntBuffer = BufferUtils.createIntBuffer(1)
       ARBVertexBufferObject.glGenBuffersARB(buffer);
@@ -106,8 +101,7 @@ class Mesh extends Node {
 
   }
 
-*/
-  def renderWithDirectMode(texture: RenderImage) {
+  private def renderWithDirectMode() {
     if (texture != null) texture.texture.bind()
 
     glBegin(GL_TRIANGLES)
