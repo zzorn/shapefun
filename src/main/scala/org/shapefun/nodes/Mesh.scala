@@ -33,7 +33,7 @@ class Mesh extends Node {
 
   var texture: TexturePart = null
 
-  // TODO: Add vertex and add index functions
+  // TODO: Check for max vertex / index when adding
 
   def buildMesh() {} // TODO: Do we need?
 
@@ -52,6 +52,8 @@ class Mesh extends Node {
       indexCount = newIndexCount
       indexes = DataArray[Int1, SInt](indexCount)
     }
+
+    clear()
   }
 
 
@@ -62,8 +64,11 @@ class Mesh extends Node {
 
   def render() {
 
+/*
     if(GLContext.getCapabilities().GL_ARB_vertex_buffer_object) renderWithVbo()
     else renderWithDirectMode()
+*/
+    renderWithDirectMode()
   }
 
   private def renderWithVbo() {
