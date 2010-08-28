@@ -72,11 +72,99 @@
       <scope>test</scope>
     </dependency>
 
-    <!-- LWJGL -->
-    <!-- TODO: Put these in lib and load in system scope, latest lwjgl isn't in any public maven repo -->
-    
-    <!-- Simplex3D - 3D Math -->
-    <!-- TODO: Put these in lib and load in system scope, simplex3d isn't in any public maven repo -->
+    <!-- OpenGL -->
+    <dependency>
+      <groupId>org.lwjgl</groupId>
+      <artifactId>lwjgl</artifactId>
+      <version>${lwjgl.version}</version>
+      <scope>system</scope>
+      <systemPath>${basedir}/lib/lwjgl.jar</systemPath>
+    </dependency>
+
+    <dependency>
+      <groupId>org.lwjgl</groupId>
+      <artifactId>lwjgl-util</artifactId>
+      <version>${lwjgl.version}</version>
+      <scope>system</scope>
+      <systemPath>${basedir}/lib/lwjgl_util.jar</systemPath>
+    </dependency>
+
+    <!-- High speed mouse, joystick, keyboard input -->
+    <dependency>
+      <groupId>jinput</groupId>
+      <artifactId>jinput</artifactId>
+      <version>unknown</version>
+      <scope>system</scope>
+      <systemPath>${basedir}/lib/jinput.jar</systemPath>
+    </dependency>
+
+    <!-- Some apple stuff -->
+    <dependency>
+      <groupId>AppleJavaExtensions</groupId>
+      <artifactId>AppleJavaExtensions</artifactId>
+      <version>unknown</version>
+      <scope>system</scope>
+      <systemPath>${basedir}/lib/AppleJavaExtensions.jar</systemPath>
+    </dependency>
+
+    <!-- 3D Math -->
+    <dependency>
+      <groupId>simplex3d</groupId>
+      <artifactId>simplex3d-math-core</artifactId>
+      <version>unknown</version>
+      <scope>system</scope>
+      <systemPath>${basedir}/lib/simplex3d-math-core.jar </systemPath>
+    </dependency>
+
+    <dependency>
+      <groupId>simplex3d</groupId>
+      <artifactId>simplex3d-math-float</artifactId>
+      <version>unknown</version>
+      <scope>system</scope>
+      <systemPath>${basedir}/lib/simplex3d-math-float.jar</systemPath>
+    </dependency>
+
+    <dependency>
+      <groupId>simplex3d</groupId>
+      <artifactId>simplex3d-math-int</artifactId>
+      <version>unknown</version>
+      <scope>system</scope>
+      <systemPath>${basedir}/lib/simplex3d-math-int.jar</systemPath>
+    </dependency>
+
+    <!-- 3D Buffers -->
+    <dependency>
+      <groupId>simplex3d</groupId>
+      <artifactId>simplex3d-buffer-core</artifactId>
+      <version>unknown</version>
+      <scope>system</scope>
+      <systemPath>${basedir}/lib/simplex3d-buffer-core.jar</systemPath>
+    </dependency>
+
+    <dependency>
+      <groupId>simplex3d</groupId>
+      <artifactId>simplex3d-buffer-float</artifactId>
+      <version>unknown</version>
+      <scope>system</scope>
+      <systemPath>${basedir}/lib/simplex3d-buffer-float.jar</systemPath>
+    </dependency>
+
+    <dependency>
+      <groupId>simplex3d</groupId>
+      <artifactId>simplex3d-buffer-int</artifactId>
+      <version>unknown</version>
+      <scope>system</scope>
+      <systemPath>${basedir}/lib/simplex3d-buffer-int.jar</systemPath>
+    </dependency>
+
+    <!-- Bytecode assembler lib used by simplex buffer -->
+    <dependency>
+      <groupId>asm</groupId>
+      <artifactId>asm</artifactId>
+      <version>3.2</version>
+      <scope>system</scope>
+      <systemPath>${basedir}/lib/asm-3.2.jar</systemPath>
+    </dependency>
 
   </dependencies>
 
