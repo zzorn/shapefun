@@ -125,7 +125,8 @@ class Mesh extends Node {
       val normal: Vec3 = normals(index)
 
       glTexCoord2d(tex.x, tex.y)
-      glColor4d(color.r, color.g, color.b, color.a)
+      //glColor4d(color.r, color.g, color.b, color.a)
+      glColor4d(1, 1, 1, 0.5)
       glNormal3d(normal.x, normal.y, normal.z)
       glVertex3d(pos.x, pos.y, pos.z)
 

@@ -14,15 +14,15 @@ case class Cube extends Mesh {
   // TODO: Eliminate the need to know in advance the number of vertexes and indexes
   allocateBuffers(8, 3*2*6)
 
-  addVertex(Vec3(-1,-1,-1))
-  addVertex(Vec3(-1,-1, 1))
-  addVertex(Vec3( 1,-1, 1))
-  addVertex(Vec3( 1,-1,-1))
+  addVertex(Vec3(-1,-1,-1)*100-Vec3(0,0,400))
+  addVertex(Vec3(-1,-1, 1)*100-Vec3(0,0,400))
+  addVertex(Vec3( 1,-1, 1)*100-Vec3(0,0,400))
+  addVertex(Vec3( 1,-1,-1)*100-Vec3(0,0,400))
 
-  addVertex(Vec3(-1, 1,-1))
-  addVertex(Vec3(-1, 1, 1))
-  addVertex(Vec3( 1, 1, 1))
-  addVertex(Vec3( 1, 1,-1))
+  addVertex(Vec3(-1, 1,-1)*100-Vec3(0,0,400))
+  addVertex(Vec3(-1, 1, 1)*100-Vec3(0,0,400))
+  addVertex(Vec3( 1, 1, 1)*100-Vec3(0,0,400))
+  addVertex(Vec3( 1, 1,-1)*100-Vec3(0,0,400))
 
   addQuad(0, 1, 2, 3)
   addQuad(7, 6, 5, 4)
