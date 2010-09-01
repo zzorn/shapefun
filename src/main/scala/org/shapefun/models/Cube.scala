@@ -9,20 +9,23 @@ import simplex3d.math.floatm.FloatMath._
 /**
  * 
  */
-case class Cube extends Mesh {
+case class Cube(x: Float = 0, y: Float = 0, z: Float = 0) extends Mesh {
 
   // TODO: Eliminate the need to know in advance the number of vertexes and indexes
   allocateBuffers(8, 3*2*6)
 
-  addVertex(Vec3(-1,-1,-1)*100-Vec3(0,0,400))
-  addVertex(Vec3(-1,-1, 1)*100-Vec3(0,0,400))
-  addVertex(Vec3( 1,-1, 1)*100-Vec3(0,0,400))
-  addVertex(Vec3( 1,-1,-1)*100-Vec3(0,0,400))
+  val scale = 100
+  val pos = Vec3(x, y, z)
 
-  addVertex(Vec3(-1, 1,-1)*100-Vec3(0,0,400))
-  addVertex(Vec3(-1, 1, 1)*100-Vec3(0,0,400))
-  addVertex(Vec3( 1, 1, 1)*100-Vec3(0,0,400))
-  addVertex(Vec3( 1, 1,-1)*100-Vec3(0,0,400))
+  addVertex(Vec3(-1,-1,-1) * scale + pos)
+  addVertex(Vec3(-1,-1, 1) * scale + pos)
+  addVertex(Vec3( 1,-1, 1) * scale + pos)
+  addVertex(Vec3( 1,-1,-1) * scale + pos)
+
+  addVertex(Vec3(-1, 1,-1) * scale + pos)
+  addVertex(Vec3(-1, 1, 1) * scale + pos)
+  addVertex(Vec3( 1, 1, 1) * scale + pos)
+  addVertex(Vec3( 1, 1,-1) * scale + pos)
 
   addQuad(0, 1, 2, 3)
   addQuad(7, 6, 5, 4)

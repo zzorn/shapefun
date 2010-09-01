@@ -112,7 +112,6 @@ class Mesh extends Node {
 
   private def renderWithDirectMode() {
 //    if (texture != null) texture.texture.bind()
-    println("renderWithDirectMode called")
 
     glBegin(GL_TRIANGLES)
 

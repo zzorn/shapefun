@@ -62,6 +62,7 @@ class Screen(preferredWidth: Int = 800, preferredHeight: Int = 600, fullScreen: 
    * If extending this class in an object, provide a main method that parses the arguments and calls start.
    */
   def main(arguments: Array[String]) {
+    println("Configuring " + getClass.getName)
     config(arguments)
 
     start()
@@ -72,6 +73,7 @@ class Screen(preferredWidth: Int = 800, preferredHeight: Int = 600, fullScreen: 
    */
   final def start() {
 
+    println("Starting " + getClass.getName)
     //canvas.setVisible(true)
     //Display.setParent(canvas)
 
@@ -82,8 +84,10 @@ class Screen(preferredWidth: Int = 800, preferredHeight: Int = 600, fullScreen: 
     init()
 
     while (running) {
+
       if (Display.isCloseRequested()) stop()
       else if (Display.isActive()) {
+
         // The window is in the foreground
         doUpdate()
         doRender()
@@ -119,7 +123,9 @@ class Screen(preferredWidth: Int = 800, preferredHeight: Int = 600, fullScreen: 
   private final def doRender() {
     glClearColor(0.5f,0.5f,0.5f,0)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
+
+    root.render()
+
     render()
 
     glFlush
@@ -171,6 +177,15 @@ class Screen(preferredWidth: Int = 800, preferredHeight: Int = 600, fullScreen: 
       //glEnable(GL_TEXTURE_2D)
       //glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA)
 
+      glDisable(GL_CULL_FACE)
+      glDisable(GL_LIGHTING)
+      glLineWidth(1)
+      val wireframe = true
+      if (wireframe) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+      else glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+
+      
+      
       updateProjection()
 
     } catch {
