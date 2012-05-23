@@ -1,9 +1,9 @@
 package org.shapefun.parser
 
 import org.scalatest.FunSuite
-import syntaxtree.Expr
 import org.scalatest.Assertions._
 import org.parboiled.errors.ParsingException
+import syntaxtree.Expr
 
 /**
  *
@@ -86,16 +86,23 @@ class ParserTest extends FunSuite {
     shouldParseTo("10 /( 2*3) ", 10.0/6)
   }
 
-
   test("Unary minus") {
     shouldParseTo("-(2+3)", -5)
     shouldParseTo("- (3) - (2)", -5)
   }
 
-  def shouldParseTo(expression: String, expected: Double) {
+  test("External variable") {
+    shouldParseTo("a", 5, SimpleContext(Map('a -> 5.0)))
+    shouldParseTo("-foo + bar * 2", 4, SimpleContext(Map('foo -> 2.0, 'bar -> 3.0)))
+    shouldNotCalculate("foobar")
+  }
+
+
+
+  def shouldParseTo(expression: String, expected: Double, context: Context = SimpleContext()) {
     val parser = new ShapeLangParser()
     val expr: Expr = parser.parse(expression)
-    val result: Any = expr.calculate(null)
+    val result: Any = expr.calculate(context)
 
 
     // If both values are NaN, test should also pass. Otherwise, do assert.
@@ -111,5 +118,11 @@ class ParserTest extends FunSuite {
   def shouldNotParse(expression: String) {
     val parser = new ShapeLangParser()
     intercept[ParsingException](parser.parse(expression))
+  }
+
+  def shouldNotCalculate(expression: String, context: Context = SimpleContext()) {
+    val parser = new ShapeLangParser()
+    val expr: Expr = parser.parse(expression)
+    intercept[Exception](expr.calculate(context))
   }
 }
