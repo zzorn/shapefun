@@ -1,5 +1,6 @@
 package org.shapefun.parser
 
+import func.MathFunctions
 import org.scalatest.FunSuite
 import org.scalatest.Assertions._
 import org.parboiled.errors.ParsingException
@@ -92,11 +93,44 @@ class ParserTest extends FunSuite {
   }
 
   test("External variable") {
-    shouldParseTo("a", 5, SimpleContext(Map('a -> 5.0)))
-    shouldParseTo("-foo + bar * 2", 4, SimpleContext(Map('foo -> 2.0, 'bar -> 3.0)))
+    shouldParseTo("a", 5, SimpleContext(Map('a -> Double.box(5.0))))
+    shouldParseTo("-foo + bar * 2", 4, SimpleContext(Map('foo -> Double.box(2.0), 'bar -> Double.box(3.0))))
     shouldNotCalculate("foobar")
   }
 
+  test("External function") {
+    shouldParseTo("abs(-1)", 1, SimpleContext(functions = MathFunctions.functions))
+    shouldParseTo(" - pow( 2.0, 3.0 ) * abs( -2)", -16, SimpleContext(functions = MathFunctions.functions))
+  }
+
+  // TODO: Boolean expressions (and, or, not etc)
+  // TODO: Number comparison (<, >, ==, <> etc)
+
+  // TODO: If
+  // TODO: For
+  // TODO: While
+  // TODO: Switch
+
+  // TODO: Variable and value definitions, variable update
+
+  // TODO: List, Map, Set? syntaxes
+
+  // TODO: Instead of class instantiation, call externally defined functions that create the necessary class (e.g. model, color, etc)
+
+  // TODO: Function definition
+
+  // TODO: Function parameters, closures?
+
+  // TODO: Enum types? / static object?
+
+  // TODO: Imports
+
+
+  // TODO: Test for not allowing too many parameters
+
+  // TODO: Test for type checking
+
+  // TODO: Extract language to own project
 
 
   def shouldParseTo(expression: String, expected: Double, context: Context = SimpleContext()) {

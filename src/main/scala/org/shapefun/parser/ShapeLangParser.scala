@@ -26,25 +26,35 @@ class ShapeLangParser extends Parser {
 
   def Expression: Rule1[Expr] = rule {
     Term ~ zeroOrMore(
-        "+ " ~ Term ~~> ((a:Expr, b:Expr) => BinaryOp('plus, a, b).asInstanceOf[Expr])
-      | "- " ~ Term ~~> ((a:Expr, b:Expr) => BinaryOp('minus, a, b).asInstanceOf[Expr])
+        "+ " ~ Term ~~> ((a:Expr, b:Expr) => NumberOp('plus, a, b).asInstanceOf[Expr])
+      | "- " ~ Term ~~> ((a:Expr, b:Expr) => NumberOp('minus, a, b).asInstanceOf[Expr])
     )
   }
 
   def Term: Rule1[Expr] = rule {
     Factor ~ zeroOrMore(
-        "* " ~ Factor ~~> ((a:Expr, b:Expr) => BinaryOp('mul, a, b).asInstanceOf[Expr])
-      | "/ " ~ Factor ~~> ((a:Expr, b:Expr) => BinaryOp('div, a, b).asInstanceOf[Expr])
+        "* " ~ Factor ~~> ((a:Expr, b:Expr) => NumberOp('mul, a, b).asInstanceOf[Expr])
+      | "/ " ~ Factor ~~> ((a:Expr, b:Expr) => NumberOp('div, a, b).asInstanceOf[Expr])
     )
   }
 
-  def Factor: Rule1[Expr] = rule { Number | Parens | NegativeExpr | VariableRef }
 
-  def NegativeExpr: Rule1[Expr] = rule { "- " ~ Factor ~~> {exp => UnaryOp('minus, exp)} }
+  def Factor: Rule1[Expr] = rule {
+      Number |
+      Parens |
+      NegativeExpr |
+      Call |
+      VariableRef }
+
+
+  def NegativeExpr: Rule1[Expr] = rule { "- " ~ Factor ~~> {exp => Neg(exp)} }
 
   def Parens: Rule1[Expr] = rule { "( " ~ Expression ~ ") " }
 
   def VariableRef: Rule1[Expr] = rule { Identifier ~~> {s => VarRefExpr(s)} ~ WhiteSpace }
+
+  def Call: Rule1[Expr] = rule { Identifier ~ "( " ~ zeroOrMore(CallParam, separator=", ") ~ ") " ~~> {(s, params) => CallExpr(s, params)} }
+  def CallParam: Rule1[Expr] = rule { Expression }
 
   def Identifier: Rule1[Symbol] = rule { group(LetterOrUnderscore ~ zeroOrMore(LetterOrUnderscore | Digit)) ~> {s => Symbol(s) }  }
   def LetterOrUnderscore = rule { "a" - "z" | "A" - "Z" | "_" }

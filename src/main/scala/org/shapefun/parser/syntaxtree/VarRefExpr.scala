@@ -1,13 +1,22 @@
 package org.shapefun.parser.syntaxtree
 
 import org.shapefun.parser.Context
+import org.shapefun.utils.ParameterChecker
 
 /**
  *
  */
 case class VarRefExpr(identifier: Symbol) extends Expr {
+  ParameterChecker.requireIsIdentifier(identifier, 'identifier)
 
-  def calculate(context: Context): Any = {
+  override def checkTypes() {}
+
+  def returnType(): Class[_] = {
+    // TODO: Can this be calculated? -> need to calculate the context
+    null
+  }
+
+  def calculate(context: Context): AnyRef = {
     context.getVariable(identifier)
   }
 
