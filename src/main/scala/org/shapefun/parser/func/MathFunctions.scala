@@ -7,9 +7,9 @@ import math._
  */
 object MathFunctions {
 
-  private var _functions = Map[Symbol, Func]()
+  private var _functions = List[Func]()
 
-  def functions: Map[Symbol, Func] = _functions
+  def functions: List[Func] = _functions
 
 
   addFunc1('abs) { abs(_) }
@@ -22,11 +22,11 @@ object MathFunctions {
 
 
   private def addFunc1(name: Symbol, p1: Symbol = 'a)(f: Double => Double) {
-    _functions += name -> MathFunc1(name, p1, f)
+    _functions ::= MathFunc1(name, p1, f)
   }
 
   private def addFunc2(name: Symbol, p1: Symbol = 'a, p2: Symbol = 'b)(f: (Double, Double) => Double) {
-    _functions += name -> MathFunc2(name, p1, p2, f)
+    _functions ::= MathFunc2(name, p1, p2, f)
   }
 
 }

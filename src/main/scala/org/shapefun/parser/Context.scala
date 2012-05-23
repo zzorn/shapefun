@@ -14,4 +14,6 @@ trait Context {
 
   def getFunction(identifier: Symbol): Func
 
+  def getFunctionOnObject(hostType: Class[_], symbol: Symbol): Func
+
 }

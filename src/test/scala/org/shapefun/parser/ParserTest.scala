@@ -1,10 +1,10 @@
 package org.shapefun.parser
 
-import func.MathFunctions
+import func.{ParameterInfo, SimpleFunc, Func, MathFunctions}
 import org.scalatest.FunSuite
 import org.scalatest.Assertions._
 import org.parboiled.errors.ParsingException
-import syntaxtree.Expr
+import syntaxtree.{Num, Expr}
 
 /**
  *
@@ -77,6 +77,7 @@ class ParserTest extends FunSuite {
 
   test("Parenthesis") {
     shouldParseTo("(1)", 1)
+    shouldParseTo("((1))", 1)
     shouldParseTo(" ( 1 ) ", 1)
     shouldParseTo("2-(3)", -1)
     shouldParseTo("(2)-(3)", -1)
@@ -102,6 +103,33 @@ class ParserTest extends FunSuite {
     shouldParseTo("abs(-1)", 1, SimpleContext(functions = MathFunctions.functions))
     shouldParseTo(" - pow( 2.0, 3.0 ) * abs( -2)", -16, SimpleContext(functions = MathFunctions.functions))
   }
+
+  test("Calling function on object") {
+    val context: SimpleContext = SimpleContext(Map(),
+      List(SimpleFunc('createFoo,
+        List(ParameterInfo('a, Num.Class)),
+        classOf[Foo],
+        {params =>
+          Foo("bar", params(0).asInstanceOf[Num.NumType])
+        })),
+
+      List(SimpleClassInfo(classOf[Foo],
+        List(SimpleFunc('invokeBaz, List(ParameterInfo('a, Num.Class)),
+        Num.Class,
+        {params =>
+          Double.box(params(0).asInstanceOf[Foo].zap + params(1).asInstanceOf[Num.NumType])
+        }
+        ))))
+    )
+
+    shouldParseToObj("createFoo(3)", Foo("bar", 3), context)
+    shouldParseTo("createFoo(4).invokeBaz(3)", 7, context)
+    shouldParseTo("-createFoo(4).invokeBaz(3)", -7, context)
+    shouldParseTo("(createFoo(4)).invokeBaz(3)", 7, context)
+    shouldParseTo("2 * createFoo(4).invokeBaz(3)", 14, context)
+  }
+
+  // TODO: Calling functions on object instances
 
   // TODO: Boolean expressions (and, or, not etc)
   // TODO: Number comparison (<, >, ==, <> etc)
@@ -149,6 +177,17 @@ class ParserTest extends FunSuite {
     }
   }
 
+  def shouldParseToObj(expression: String, expected: AnyRef, context: Context = SimpleContext()) {
+    val parser = new ShapeLangParser()
+    val expr: Expr = parser.parse(expression)
+    val result: Any = expr.calculate(context)
+
+    // Print some debugging help on fail
+    if (result != expected) println("Expression was: " + expr)
+
+    assert(result === expected)
+  }
+
   def shouldNotParse(expression: String) {
     val parser = new ShapeLangParser()
     intercept[ParsingException](parser.parse(expression))
@@ -159,4 +198,11 @@ class ParserTest extends FunSuite {
     val expr: Expr = parser.parse(expression)
     intercept[Exception](expr.calculate(context))
   }
+
+
+  case class Foo(bar: String, zap: Double) {
+
+  }
 }
+
+

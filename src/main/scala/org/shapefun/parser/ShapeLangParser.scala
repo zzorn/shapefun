@@ -40,11 +40,16 @@ class ShapeLangParser extends Parser {
 
 
   def Factor: Rule1[Expr] = rule {
+    Call |
+    Callable |
+    NegativeExpr
+  }
+
+  def Callable: Rule1[Expr] = rule {
       Number |
       Parens |
-      NegativeExpr |
-      Call |
-      VariableRef }
+      VariableRef
+  }
 
 
   def NegativeExpr: Rule1[Expr] = rule { "- " ~ Factor ~~> {exp => Neg(exp)} }
@@ -53,7 +58,19 @@ class ShapeLangParser extends Parser {
 
   def VariableRef: Rule1[Expr] = rule { Identifier ~~> {s => VarRefExpr(s)} ~ WhiteSpace }
 
-  def Call: Rule1[Expr] = rule { Identifier ~ "( " ~ zeroOrMore(CallParam, separator=", ") ~ ") " ~~> {(s, params) => CallExpr(s, params)} }
+  def Call: Rule1[Expr] = rule {
+    FirstCall ~ zeroOrMore(
+      ". " ~ CallIdAndParams ~~>
+        {(obj: Expr, ident: Symbol, params: List[Expr]) =>
+          CallExpr(Some(obj), ident, params).asInstanceOf[Expr]}
+    )
+  }
+  def FirstCall: Rule1[Expr] = rule {
+    optional(Callable ~ ". ") ~ CallIdAndParams ~~>
+      {(obj, ident, params) =>
+        CallExpr(obj, ident, params)}
+  }
+  def CallIdAndParams: Rule2[Symbol, List[Expr]] = rule { Identifier ~ "( " ~ zeroOrMore(CallParam, separator=", ") ~ ") "  }
   def CallParam: Rule1[Expr] = rule { Expression }
 
   def Identifier: Rule1[Symbol] = rule { group(LetterOrUnderscore ~ zeroOrMore(LetterOrUnderscore | Digit)) ~> {s => Symbol(s) }  }

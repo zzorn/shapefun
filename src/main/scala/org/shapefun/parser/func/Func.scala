@@ -10,7 +10,7 @@ trait Func {
 
   def identifier: Symbol
 
-  def parameters: List[Parameter]
+  def parameters: List[ParameterInfo]
 
   def returnType: Class[_]
 
@@ -22,7 +22,7 @@ trait Func {
 
     // Check parameter types
     parameters zip params foreach {p =>
-      val parameterInfo: Parameter = p._1
+      val parameterInfo: ParameterInfo = p._1
       val parameterExpr: Expr     = p._2
       if (!parameterInfo.kind.isAssignableFrom(parameterExpr.returnType()))
         throw new CalculationError("Can not assign a value of type '"+parameterExpr.returnType()+"' " +
@@ -32,6 +32,10 @@ trait Func {
 
   def invoke(parameters: List[AnyRef]): AnyRef
 
+  def invokeOnObject(obj: AnyRef, parameters: List[AnyRef]): AnyRef = {
+    invoke(obj :: parameters)
+  }
+
 }
 
-case class Parameter(name: Symbol, kind: Class[_] /* , defaultValue: Expr */)
+case class ParameterInfo(name: Symbol, kind: Class[_] /* , defaultValue: Expr */)

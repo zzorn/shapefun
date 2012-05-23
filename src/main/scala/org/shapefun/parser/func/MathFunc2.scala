@@ -8,8 +8,8 @@ import org.shapefun.parser.syntaxtree.Num
 case class MathFunc2(identifier: Symbol, param1Name: Symbol, param2Name: Symbol, func: (Double, Double)=> Double) extends Func {
 
   def parameters = List(
-    Parameter(param1Name, Num.Class),
-    Parameter(param2Name, Num.Class)
+    ParameterInfo(param1Name, Num.Class),
+    ParameterInfo(param2Name, Num.Class)
   )
 
   def returnType = Num.Class
