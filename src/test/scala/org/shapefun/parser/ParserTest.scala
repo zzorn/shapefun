@@ -129,10 +129,10 @@ class ParserTest extends FunSuite {
     shouldParseTo("2 * createFoo(4).invokeBaz(3)", 14, context)
   }
 
-  // TODO: Calling functions on object instances
-
   // TODO: Boolean expressions (and, or, not etc)
   // TODO: Number comparison (<, >, ==, <> etc)
+
+  // TODO: Function definition
 
   // TODO: If
   // TODO: For
@@ -144,8 +144,6 @@ class ParserTest extends FunSuite {
   // TODO: List, Map, Set? syntaxes
 
   // TODO: Instead of class instantiation, call externally defined functions that create the necessary class (e.g. model, color, etc)
-
-  // TODO: Function definition
 
   // TODO: Function parameters, closures?
 
