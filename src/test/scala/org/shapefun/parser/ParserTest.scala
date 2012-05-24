@@ -129,6 +129,37 @@ class ParserTest extends FunSuite {
     shouldParseTo("2 * createFoo(4).invokeBaz(3)", 14, context)
   }
 
+  test("Comparision expressions") {
+    shouldParseToBool("1 < 0", false)
+    shouldParseToBool("1 > 0", true)
+    shouldParseToBool("1 > 1", false)
+    shouldParseToBool("1 >= 1", true)
+    shouldParseToBool("1 <= 1", true)
+    shouldParseToBool("1 == 1", true)
+    shouldParseToBool("1 != 1", false)
+    shouldParseToBool("1 > 1", false)
+    shouldParseToBool("1 < 1", false)
+
+    shouldParseToBool("1 < 2 < 3", true)
+    shouldParseToBool("1 < 2 > 1", true)
+    shouldParseToBool("1 <= 2 >= 2", true)
+    shouldParseToBool("10 > 4 >= -1", true)
+    shouldParseToBool("10 > 4 >= 5", false)
+    shouldParseToBool("10 > -4 >= -1", false)
+    shouldParseToBool("10 > 11 >= -1", false)
+  }
+
+  test("Boolean expressions") {
+    shouldParseToBool("1 > 0 and true", true)
+    shouldParseToBool("1 > 0 and false", false)
+    shouldParseToBool("1 > 0 or false", true)
+    shouldParseToBool("not 1 > 0 or false", false)
+    shouldParseToBool("(true or false) xor false", true)
+    shouldParseToBool("(true or false) xor 0 < 1", false)
+    shouldParseToBool("true and true and true and true", true)
+    shouldParseToBool("true and false or true and false", false)
+  }
+
   // TODO: Boolean expressions (and, or, not etc)
   // TODO: Number comparison (<, >, ==, <> etc)
 
@@ -173,6 +204,10 @@ class ParserTest extends FunSuite {
 
       assert(result === expected)
     }
+  }
+
+  def shouldParseToBool(expression: String, expected: Boolean, context: Context = SimpleContext()) {
+    shouldParseToObj(expression, Boolean.box(expected), context)
   }
 
   def shouldParseToObj(expression: String, expected: AnyRef, context: Context = SimpleContext()) {

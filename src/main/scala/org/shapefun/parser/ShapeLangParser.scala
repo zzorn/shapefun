@@ -23,8 +23,48 @@ class ShapeLangParser extends Parser {
 
   def InputLine = rule { WhiteSpace ~ Expression ~ EOI }
 
+  def Expression: Rule1[Expr] = OrExpr
 
-  def Expression: Rule1[Expr] = rule {
+
+  def OrExpr: Rule1[Expr] = rule {
+    XorExpr ~ zeroOrMore(
+      "or " ~ XorExpr ~~> ((a:Expr, b:Expr) => BooleanOp(a, 'or, b).asInstanceOf[Expr])
+    )
+  }
+
+  def XorExpr: Rule1[Expr] = rule {
+    AndExpr ~ zeroOrMore(
+      "xor " ~ AndExpr ~~> ((a:Expr, b:Expr) => BooleanOp(a, 'xor, b).asInstanceOf[Expr])
+    )
+  }
+
+  def AndExpr: Rule1[Expr] = rule {
+    NotExpr ~ zeroOrMore(
+      "and " ~ NotExpr ~~> ((a:Expr, b:Expr) => BooleanOp(a, 'and, b).asInstanceOf[Expr])
+    )
+  }
+
+  def NotExpr: Rule1[Expr] = rule {
+    EqualityExpr |
+    "not " ~ EqualityExpr ~~> {expr => Not(expr)}
+  }
+
+  def EqualityExpr: Rule1[Expr] = rule {
+    ComparisonExpr ~ EqualitySymbol ~ ComparisonExpr ~~> {(a, sym, b) => EqualityComparisonOp(a, sym, b)} |
+      ComparisonExpr
+  }
+  def EqualitySymbol: Rule1[Symbol] = rule { group("==" | "!=") ~> {s => Symbol(s)} ~ WhiteSpace }
+
+
+  def ComparisonExpr: Rule1[Expr] = rule {
+    TermExpr ~ ComparisonSymbol ~ TermExpr  ~ ComparisonSymbol ~ TermExpr ~~> {(a, sym1, b, sym2, c) => ComparisonOp(a, sym1, b, sym2, c)} |
+    TermExpr ~ ComparisonSymbol ~ TermExpr ~~> {(a, sym, b) => ComparisonOp(a, sym, b)} |
+    TermExpr
+  }
+  def ComparisonSymbol: Rule1[Symbol] = rule { group("<=" | ">=" | "<" | ">" ) ~> {s => Symbol(s)} ~ WhiteSpace }
+
+
+  def TermExpr: Rule1[Expr] = rule {
     Term ~ zeroOrMore(
         "+ " ~ Term ~~> ((a:Expr, b:Expr) => NumberOp('plus, a, b).asInstanceOf[Expr])
       | "- " ~ Term ~~> ((a:Expr, b:Expr) => NumberOp('minus, a, b).asInstanceOf[Expr])
@@ -47,6 +87,7 @@ class ShapeLangParser extends Parser {
 
   def Callable: Rule1[Expr] = rule {
       Number |
+      BooleanConst |
       Parens |
       VariableRef
   }
@@ -75,6 +116,11 @@ class ShapeLangParser extends Parser {
 
   def Identifier: Rule1[Symbol] = rule { group(LetterOrUnderscore ~ zeroOrMore(LetterOrUnderscore | Digit)) ~> {s => Symbol(s) }  }
   def LetterOrUnderscore = rule { "a" - "z" | "A" - "Z" | "_" }
+
+  def BooleanConst: Rule1[Expr] = rule {
+    "true "  ~> {_ => True } |
+    "false " ~> {_ => False}
+  }
 
   def Number: Rule1[Expr] = rule { group(Integer ~ optional(Fraction)) ~> (s => {Num(s.toDouble)}) } ~ WhiteSpace
   def Integer: Rule0 = rule { optional("-") ~ (("1" - "9") ~ Digits | Digit) } // No leading zero in an integer, except if there is just one digit
