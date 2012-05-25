@@ -10,6 +10,8 @@ import scala.Predef._
 case class NumberOp(operation: Symbol, left: Expr, right: Expr) extends Expr {
 
   override def checkTypes() {
+    left.checkTypes()
+    right.checkTypes()
     ensureIsAssignable(Num.Class, left)
     ensureIsAssignable(Num.Class, right)
   }

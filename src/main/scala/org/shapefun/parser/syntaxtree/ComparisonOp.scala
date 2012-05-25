@@ -8,6 +8,10 @@ import org.shapefun.parser.Context
 case class ComparisonOp(a: Expr, op1: Symbol, b: Expr, op2: Symbol = null, c: Expr = null) extends Expr {
 
   override def checkTypes() {
+    a.checkTypes()
+    b.checkTypes()
+    if (c != null) c.checkTypes()
+
     ensureIsAssignable(Num.Class, a)
     ensureIsAssignable(Num.Class, b)
     if (c != null) ensureIsAssignable(Num.Class, c)

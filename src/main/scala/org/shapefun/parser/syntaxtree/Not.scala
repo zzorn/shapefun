@@ -8,6 +8,7 @@ import org.shapefun.parser.Context
 case class Not(expr: Expr) extends Expr {
 
   override def checkTypes() {
+    expr.checkTypes()
     ensureIsAssignable(Bool.Class, expr)
   }
 

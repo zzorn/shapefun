@@ -5,6 +5,7 @@ import org.scalatest.FunSuite
 import org.scalatest.Assertions._
 import org.parboiled.errors.ParsingException
 import syntaxtree.{Num, Expr}
+import org.shapefun.utils.StepRange
 
 /**
  *
@@ -139,6 +140,10 @@ class ParserTest extends FunSuite {
     shouldParseToBool("1 != 1", false)
     shouldParseToBool("1 > 1", false)
     shouldParseToBool("1 < 1", false)
+    shouldNotParse("1 == 1 == 1")
+    shouldNotParse("1 != 1 == 1")
+    shouldNotParse("1 == 1 != 1")
+    shouldNotParse("1 != 1 != 1")
 
     shouldParseToBool("1 < 2 < 3", true)
     shouldParseToBool("1 < 2 > 1", true)
@@ -149,7 +154,41 @@ class ParserTest extends FunSuite {
     shouldParseToBool("10 > 11 >= -1", false)
   }
 
+  test("Equals and not equals") {
+    shouldParseToBool("1 == 1", true)
+    shouldParseToBool("-1 == 0", false)
+    shouldParseToBool("1 == true", false)
+    shouldParseToBool("false == true", false)
+    shouldParseToBool("true == true", true)
+    shouldParseToBool("false == false", true)
+
+    shouldParseToBool("false != false", false)
+    shouldParseToBool("false != true", true)
+    shouldParseToBool("false != 1", true)
+    shouldParseToBool("1 != 1", false)
+  }
+
   test("Boolean expressions") {
+    shouldParseToBool("true", true)
+    shouldParseToBool("false", false)
+    shouldParseToBool("true or false", true)
+    shouldParseToBool("false or false", false)
+    shouldParseToBool("false and true", false)
+    shouldParseToBool("true and true", true)
+    shouldParseToBool("true xor true", false)
+    shouldParseToBool("false xor true", true)
+    shouldParseToBool("false xor false", false)
+
+    shouldParseToBool("false or false or true", true)
+    shouldParseToBool("false or false or false", false)
+    shouldParseToBool("false and true and false", false)
+    shouldParseToBool("true and true and true", true)
+
+    shouldParseToBool("not true", false)
+    shouldParseToBool("not false", true)
+    shouldParseToBool("not false or true", true)
+
+    shouldParseToBool("(1 > 0) and true", true)
     shouldParseToBool("1 > 0 and true", true)
     shouldParseToBool("1 > 0 and false", false)
     shouldParseToBool("1 > 0 or false", true)
@@ -160,15 +199,76 @@ class ParserTest extends FunSuite {
     shouldParseToBool("true and false or true and false", false)
   }
 
-  // TODO: Boolean expressions (and, or, not etc)
-  // TODO: Number comparison (<, >, ==, <> etc)
+
+  test("If") {
+    shouldParseTo("if 1 > 0 then 5 else 6", 5)
+    shouldParseTo("if 1 < 0 then 5 else 6", 6)
+  }
+
+  /* For loop alternatives
+  - Can a for loop be an expression?  What to return?
+   - Nothing intuitive -> return nothing.  To make it an expression, maybe return number of times looped?
+   //- Or maybe support yield, and return list with all yielded values?
+
+  for x in 10..-10 step 2,
+      y in rows,
+      z in [1, -1] do {
+    setPixel(x, y, x*y*z)
+    doSth( rel(x) )
+
+    // Relative position along loop range, always 0 = first element, 1 = last element, interpolate in between, if only 1 element, 0
+    relative(x) // Probably cleanest, similar syntax to function call
+    rel(x)  // shorter, more practical to use
+    ~x // very concise, but somewhat cryptic, and uses an operator char
+    x~
+    x% // more intuitive.  Some potential confusion with modulo operator, which might be good to have too
+    %x
+
+  }
+
+  // for x = 1; x < 10; x++ do {}  // This is somewhat redundant, not so intuitive.  for x in -syntax is more useful for majority of cases.
+
+  var x = 1
+  while x < 10 do { x++}
+
+
+  Ranges:
+
+    0..10     (both inclusive, or end exclusive?)
+    0..100 step 5     // In 20 steps of 5
+    0..100 steps 5    // In 5 steps of 20
+    0..100 in 5 steps // In 5 steps of 20 - clearer syntax, but more verbose and not following same pattern
+
+
+   */
+
+  test("Range") {
+    shouldParseToObj("10..100", StepRange(10, 100))
+    shouldParseToObj(" 10 .. 100 ", StepRange(10, 100))
+    shouldParseToObj(" 10.. 100 ", StepRange(10, 100))
+    shouldParseToObj(" 10 ..100 ", StepRange(10, 100))
+    shouldParseToObj("10...100", StepRange(10, 100, 1, true))
+    shouldParseToObj("10 ...100 step 2", StepRange(10, 100, 2, true))
+    shouldParseToObj("0... 100 steps 5", StepRange.withSteps(0, 100, 5, true))
+
+    shouldParseToObj("10..-10", StepRange(10, -10))
+    shouldParseToObj("10 ... -10", StepRange(10, -10, 1, true))
+    shouldParseToObj("10..-10 step 3", StepRange(10, -10, 3, false))
+
+    shouldParseToObj("0..1 steps 10", StepRange(0, 1, 0.1))
+    shouldParseToObj("0.5..0.7 step 0.1", StepRange(0.5, 0.7, 0.1))
+
+    shouldParseToObj("3+2 ..-3 -1 step 10/2", StepRange(5, -4, 5))
+    shouldParseToBool("3+2 .. -3 -1 step 10/2 == 5+2-2 .. 8-12 step 5", true)
+  }
+
+
 
   // TODO: Function definition
 
   // TODO: If
   // TODO: For
   // TODO: While
-  // TODO: Switch
 
   // TODO: Variable and value definitions, variable update
 

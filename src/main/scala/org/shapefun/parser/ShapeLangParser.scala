@@ -45,8 +45,8 @@ class ShapeLangParser extends Parser {
   }
 
   def NotExpr: Rule1[Expr] = rule {
-    EqualityExpr |
-    "not " ~ EqualityExpr ~~> {expr => Not(expr)}
+    "not " ~ EqualityExpr ~~> {expr => Not(expr)} |
+    EqualityExpr
   }
 
   def EqualityExpr: Rule1[Expr] = rule {
@@ -57,12 +57,22 @@ class ShapeLangParser extends Parser {
 
 
   def ComparisonExpr: Rule1[Expr] = rule {
-    TermExpr ~ ComparisonSymbol ~ TermExpr  ~ ComparisonSymbol ~ TermExpr ~~> {(a, sym1, b, sym2, c) => ComparisonOp(a, sym1, b, sym2, c)} |
-    TermExpr ~ ComparisonSymbol ~ TermExpr ~~> {(a, sym, b) => ComparisonOp(a, sym, b)} |
-    TermExpr
+    Range ~ ComparisonSymbol ~ Range  ~ ComparisonSymbol ~ Range ~~> {(a, sym1, b, sym2, c) => ComparisonOp(a, sym1, b, sym2, c)} |
+    Range ~ ComparisonSymbol ~ Range ~~> {(a, sym, b) => ComparisonOp(a, sym, b)} |
+    Range
   }
   def ComparisonSymbol: Rule1[Symbol] = rule { group("<=" | ">=" | "<" | ">" ) ~> {s => Symbol(s)} ~ WhiteSpace }
 
+  def Range: Rule1[Expr] = rule {
+    RangeStartEndInclusive ~ "steps " ~ TermExpr ~~> {(start, end, inclusive, steps) => RangeExpr(start, end, inclusive, steps=steps)} |
+    RangeStartEndInclusive ~ "step " ~ TermExpr ~~> {(start, end, inclusive, step) => RangeExpr(start, end, inclusive, step=step)} |
+    RangeStartEndInclusive ~~> {(start, end, inclusive) => RangeExpr(start, end, inclusive)} |
+    TermExpr
+  }
+  def RangeStartEndInclusive: Rule3[Expr, Expr, Boolean] = rule {
+    TermExpr ~ "... " ~ TermExpr ~ push(true) |
+    TermExpr ~ ".. " ~ TermExpr ~ push(false)
+  }
 
   def TermExpr: Rule1[Expr] = rule {
     Term ~ zeroOrMore(
@@ -89,9 +99,14 @@ class ShapeLangParser extends Parser {
       Number |
       BooleanConst |
       Parens |
+      If |
       VariableRef
   }
 
+
+  def If: Rule1[Expr] = rule {
+    "if " ~ Expression ~ "then " ~ Expression ~ "else " ~ Expression ~~> {(c: Expr, t: Expr, e: Expr) => IfExpr(c, t, e)}
+  }
 
   def NegativeExpr: Rule1[Expr] = rule { "- " ~ Factor ~~> {exp => Neg(exp)} }
 

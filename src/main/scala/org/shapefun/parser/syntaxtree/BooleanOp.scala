@@ -8,6 +8,8 @@ import org.shapefun.parser.Context
 case class BooleanOp(a: Expr, op1: Symbol, b: Expr) extends Expr {
 
   override def checkTypes() {
+    a.checkTypes()
+    b.checkTypes()
     ensureIsAssignable(Num.Class, a)
     ensureIsAssignable(Num.Class, b)
   }

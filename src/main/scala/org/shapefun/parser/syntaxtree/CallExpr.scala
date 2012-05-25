@@ -8,6 +8,9 @@ import org.shapefun.parser.Context
 case class CallExpr(hostObj: Option[Expr], identifier: Symbol, parameters: List[Expr]) extends Expr {
 
   override def checkTypes() {
+    if (hostObj.isDefined) hostObj.get.checkTypes()
+    parameters foreach (_.checkTypes())
+
     // TODO: Get function from context, call checking
   }
 
