@@ -12,6 +12,10 @@ trait Context {
 
   def getVariable(identifier: Symbol): AnyRef
 
+  def addVariable(identifier: Symbol, value: AnyRef)
+
+  def setVariable(identifier: Symbol, value: AnyRef)
+
   def getFunction(identifier: Symbol): Func
 
   def getFunctionOnObject(hostType: Class[_], symbol: Symbol): Func

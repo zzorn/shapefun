@@ -140,6 +140,7 @@ class ParserTest extends FunSuite {
     shouldParseToBool("1 != 1", false)
     shouldParseToBool("1 > 1", false)
     shouldParseToBool("1 < 1", false)
+
     shouldNotParse("1 == 1 == 1")
     shouldNotParse("1 != 1 == 1")
     shouldNotParse("1 == 1 != 1")
@@ -205,6 +206,17 @@ class ParserTest extends FunSuite {
     shouldParseTo("if 1 < 0 then 5 else 6", 6)
   }
 
+  test("Block") {
+    shouldParseTo("3 + \n 3", 6)
+    shouldParseTo("3 \n + 3", 6)
+    shouldParseTo("3", 3)
+    shouldParseTo("3;", 3)
+    shouldParseTo(" 3 ; ", 3)
+    shouldParseTo("1; 2; 3", 3)
+    shouldParseTo("1\n 2\n 3", 3)
+    shouldNotParse("1 2 3")
+  }
+
   /* For loop alternatives
   - Can a for loop be an expression?  What to return?
    - Nothing intuitive -> return nothing.  To make it an expression, maybe return number of times looped?
@@ -242,6 +254,64 @@ class ParserTest extends FunSuite {
 
    */
 
+  test("Variable declaration and assignment") {
+    shouldParseTo(
+      """
+        | var a = 5 + 2
+        | var b = a * 4 - 1
+        | b = b + 1
+        | a + b
+      """.stripMargin, 35)
+
+    shouldParseTo(
+      """
+        | var foo = 5
+        | foo += 5
+        | foo *= 2
+        | foo /= 3+2
+        | foo
+      """.stripMargin, 4)
+
+    shouldNotCalculate("foo = 3") // Need to declare before use
+    shouldNotParse("var bar") // Need to provide initial value when declaring
+  }
+
+  test("Inc and dec ops") {
+    shouldParseTo(
+      """
+        | var a = 1
+        | a++
+        | a++
+        | a
+      """.stripMargin, 3)
+
+    shouldParseTo(
+      """
+        | var a = 1
+        | a++
+        | a++
+        | a++
+      """.stripMargin, 3)
+
+    shouldParseTo(
+      """
+        | var a = 1
+        | a++
+        | a--
+        | a++
+        | a--
+      """.stripMargin, 2)
+
+    shouldParseTo(
+      """
+        | var foo = 1
+        | 4* -foo++ + 3
+      """.stripMargin, -1)
+
+    shouldNotParse("1++") // Increment operator only works on variables
+    shouldNotParse("var a; ++a") // Prefix increment and decrement not implemented
+  }
+
   test("Range") {
     shouldParseToObj("10..100", StepRange(10, 100))
     shouldParseToObj(" 10 .. 100 ", StepRange(10, 100))
@@ -266,11 +336,8 @@ class ParserTest extends FunSuite {
 
   // TODO: Function definition
 
-  // TODO: If
   // TODO: For
   // TODO: While
-
-  // TODO: Variable and value definitions, variable update
 
   // TODO: List, Map, Set? syntaxes
 
