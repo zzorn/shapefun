@@ -7,6 +7,8 @@ import org.shapefun.utils.ParameterChecker
 /**
  *
  */
+// TODO: Make it nested, allowing it to take a parent context as parameter.  Make the root context the one with the external values.
+// TODO: Split up values into variables and constant values
 case class SimpleContext(externalValues: Map[Symbol, AnyRef] = Map(),
                          functions: List[Func] = Nil,
                          classTypes: List[ClassInfo] = Nil ) extends Context {
