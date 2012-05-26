@@ -1,6 +1,7 @@
 package org.shapefun.parser
 
 
+import defs.{ExprFunDef, ParamInfo}
 import org.parboiled.scala._
 import org.parboiled.errors.{ErrorUtils, ParsingException}
 import java.lang.String
@@ -35,9 +36,18 @@ class ShapeLangParser extends Parser {
   def Statement: Rule1[Expr] = rule {
     For |
     VarDef |
+    Func |
     VarAssig |
     Block |
     Expression
+  }
+
+  def KindConstruct: Rule1[Kind] = rule {
+    " :" ~ SimpleKind
+  }
+
+  def SimpleKind: Rule1[Kind] = rule {
+    AllowedName ~~> {s: Symbol => Kind(s)}
   }
 
   def Block: Rule1[Expr] = rule {
@@ -45,11 +55,22 @@ class ShapeLangParser extends Parser {
   }
 
   def VarDef: Rule1[Expr] = rule {
-    " var" ~ VariableName ~ " =" ~ Expression ~~> {(name: Symbol, initialValue: Expr) => VarDefinition(name, initialValue)}
+    " var" ~ AllowedName ~ " =" ~ Expression ~~> {(name: Symbol, initialValue: Expr) => VarDefinition(name, initialValue)}
+  }
+
+  def Func: Rule1[Expr] = rule {
+    " def" ~ AllowedName ~ " (" ~ zeroOrMore(FuncParam, " ,") ~ " )" ~ optional(KindConstruct) ~ (" =" ~ Expression | Block) ~~>
+      {(name: Symbol, params: List[ParamInfo], kind, body) =>
+        FunDefExpr(name, params, kind.getOrElse(null), body)}
+  }
+  def FuncParam: Rule1[ParamInfo] = rule {
+    AllowedName ~ optional(KindConstruct) ~ optional(" =" ~ Expression) ~~>
+      {(id, kind, defVal) =>
+        ParamInfo(id, kind.getOrElse(Num.Kind), defVal.getOrElse(null))}
   }
 
   def VarAssig: Rule1[Expr] = rule {
-    VariableName ~ AssignmentOp ~ Expression ~~> {(name: Symbol, op: Symbol, value: Expr) => VarAssignment(name, op, value)}
+    AllowedName ~ AssignmentOp ~ Expression ~~> {(name: Symbol, op: Symbol, value: Expr) => VarAssignment(name, op, value)}
   }
   def AssignmentOp: Rule1[Symbol] = rule {
     WhiteSpace ~ group("+=" | "-=" | "*=" | "/=" | "=") ~> {s => Symbol(s)}
@@ -59,7 +80,7 @@ class ShapeLangParser extends Parser {
     " for" ~ oneOrMore(ForLoopVarDef, " ,") ~ " do" ~ Statement ~~> {(loopVars, block) => ForLoop(loopVars, block)}
   }
   def ForLoopVarDef: Rule1[ForLoopVar] = rule {
-    VariableName ~ " in" ~ Expression ~~> {(name: Symbol, range: Expr) => ForLoopVar(name, range)}
+    AllowedName ~ " in" ~ Expression ~~> {(name: Symbol, range: Expr) => ForLoopVar(name, range)}
   }
 
   def Expression: Rule1[Expr] = OrExpr
@@ -151,12 +172,12 @@ class ShapeLangParser extends Parser {
 
   def NegativeExpr: Rule1[Expr] = rule { " -" ~ Factor ~~> {exp => Neg(exp)} }
 
-  def VarInc: Rule1[Expr] = rule {VariableName ~ " ++" ~~> {name => IncDecOp(name, increment = true)}}
-  def VarDec: Rule1[Expr] = rule {VariableName ~ " --" ~~> {name => IncDecOp(name, increment = false)}}
+  def VarInc: Rule1[Expr] = rule {AllowedName ~ " ++" ~~> {name => IncDecOp(name, increment = true)}}
+  def VarDec: Rule1[Expr] = rule {AllowedName ~ " --" ~~> {name => IncDecOp(name, increment = false)}}
 
   def Parens: Rule1[Expr] = rule { " (" ~ Expression ~ " )" }
 
-  def VariableRef: Rule1[Expr] = rule { VariableName ~~> {s => ValueRefExpr(s)} }
+  def VariableRef: Rule1[Expr] = rule { AllowedName ~~> {s => ValueRefExpr(s)} }
 
   def Call: Rule1[Expr] = rule {
     FirstCall ~ zeroOrMore(
@@ -173,7 +194,7 @@ class ShapeLangParser extends Parser {
   def CallIdAndParams: Rule2[Symbol, List[Expr]] = rule { Identifier ~ " (" ~ zeroOrMore(CallParam, separator=" ,") ~ " )"  }
   def CallParam: Rule1[Expr] = rule { Expression }
 
-  def VariableName: Rule1[Symbol] = Identifier // TODO: Exclude keywords
+  def AllowedName: Rule1[Symbol] = Identifier // TODO: Exclude keywords
   def Identifier: Rule1[Symbol] = rule { WhiteSpace ~ group(LetterOrUnderscore ~ zeroOrMore(LetterOrUnderscore | Digit)) ~> {s => Symbol(s) }  }
   def LetterOrUnderscore = rule { "a" - "z" | "A" - "Z" | "_" }
 

@@ -126,7 +126,7 @@ object MathContext {
 
   def createMathFunc0(name: Symbol,
                      mathFunc: => Double): FunDef =
-    ExternalFunDef(name, List(), Num.Class, {
+    ExternalFunDef(name, List(), Num.Kind, {
       args =>
         Double.box(mathFunc)
     })
@@ -135,8 +135,8 @@ object MathContext {
                      param1Name: Symbol,
                      mathFunc: (Double) => Double): FunDef =
     ExternalFunDef(name, List(
-      ParamInfo(param1Name, Num.Class)
-    ), Num.Class, {
+      ParamInfo(param1Name, Num.Kind)
+    ), Num.Kind, {
       args =>
         Double.box(mathFunc(
           Double.unbox(args(param1Name))
@@ -148,9 +148,9 @@ object MathContext {
                      param2: Symbol,
                      mathFunc: (Double, Double) => Double): FunDef =
     ExternalFunDef(name, List(
-      ParamInfo(param1, Num.Class),
-      ParamInfo(param2, Num.Class)
-    ), Num.Class, {
+      ParamInfo(param1, Num.Kind),
+      ParamInfo(param2, Num.Kind)
+    ), Num.Kind, {
       args =>
         Double.box(mathFunc(
           Double.unbox(args(param1)),
@@ -164,10 +164,10 @@ object MathContext {
                      param3: Symbol,
                      mathFunc: (Double, Double, Double) => Double): FunDef =
     ExternalFunDef(name, List(
-      ParamInfo(param1, Num.Class),
-      ParamInfo(param2, Num.Class),
-      ParamInfo(param3, Num.Class)
-    ), Num.Class, {
+      ParamInfo(param1, Num.Kind),
+      ParamInfo(param2, Num.Kind),
+      ParamInfo(param3, Num.Kind)
+    ), Num.Kind, {
       args =>
         Double.box(mathFunc(
           Double.unbox(args(param1)),
@@ -183,11 +183,11 @@ object MathContext {
                      param4: Symbol,
                      mathFunc: (Double, Double, Double, Double) => Double): FunDef =
     ExternalFunDef(name, List(
-      ParamInfo(param1, Num.Class),
-      ParamInfo(param2, Num.Class),
-      ParamInfo(param3, Num.Class),
-      ParamInfo(param4, Num.Class)
-    ), Num.Class, {
+      ParamInfo(param1, Num.Kind),
+      ParamInfo(param2, Num.Kind),
+      ParamInfo(param3, Num.Kind),
+      ParamInfo(param4, Num.Kind)
+    ), Num.Kind, {
       args =>
         Double.box(mathFunc(
           Double.unbox(args(param1)),
@@ -205,12 +205,12 @@ object MathContext {
                      param5: Symbol,
                      mathFunc: (Double, Double, Double, Double, Double) => Double): FunDef =
     ExternalFunDef(name, List(
-      ParamInfo(param1, Num.Class),
-      ParamInfo(param2, Num.Class),
-      ParamInfo(param3, Num.Class),
-      ParamInfo(param4, Num.Class),
-      ParamInfo(param5, Num.Class)
-    ), Num.Class, {
+      ParamInfo(param1, Num.Kind),
+      ParamInfo(param2, Num.Kind),
+      ParamInfo(param3, Num.Kind),
+      ParamInfo(param4, Num.Kind),
+      ParamInfo(param5, Num.Kind)
+    ), Num.Kind, {
       args =>
         Double.box(mathFunc(
           Double.unbox(args(param1)),
@@ -230,13 +230,13 @@ object MathContext {
                      param6: Symbol,
                      mathFunc: (Double, Double, Double, Double, Double, Double) => Double): FunDef =
     ExternalFunDef(name, List(
-      ParamInfo(param1, Num.Class),
-      ParamInfo(param2, Num.Class),
-      ParamInfo(param3, Num.Class),
-      ParamInfo(param4, Num.Class),
-      ParamInfo(param5, Num.Class),
-      ParamInfo(param6, Num.Class)
-    ), Num.Class, {
+      ParamInfo(param1, Num.Kind),
+      ParamInfo(param2, Num.Kind),
+      ParamInfo(param3, Num.Kind),
+      ParamInfo(param4, Num.Kind),
+      ParamInfo(param5, Num.Kind),
+      ParamInfo(param6, Num.Kind)
+    ), Num.Kind, {
       args =>
         Double.box(mathFunc(
           Double.unbox(args(param1)),
@@ -258,14 +258,14 @@ object MathContext {
                      param7: Symbol,
                      mathFunc: (Double, Double, Double, Double, Double, Double, Double) => Double): FunDef =
     ExternalFunDef(name, List(
-      ParamInfo(param1, Num.Class),
-      ParamInfo(param2, Num.Class),
-      ParamInfo(param3, Num.Class),
-      ParamInfo(param4, Num.Class),
-      ParamInfo(param5, Num.Class),
-      ParamInfo(param6, Num.Class),
-      ParamInfo(param7, Num.Class)
-    ), Num.Class, {
+      ParamInfo(param1, Num.Kind),
+      ParamInfo(param2, Num.Kind),
+      ParamInfo(param3, Num.Kind),
+      ParamInfo(param4, Num.Kind),
+      ParamInfo(param5, Num.Kind),
+      ParamInfo(param6, Num.Kind),
+      ParamInfo(param7, Num.Kind)
+    ), Num.Kind, {
       args =>
         Double.box(mathFunc(
           Double.unbox(args(param1)),

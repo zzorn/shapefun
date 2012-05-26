@@ -115,13 +115,13 @@ class ParserTest extends FunSuite {
 
   test("Calling function on object") {
     val context = ContextImpl()
-    context.addFun(new ExternalFunDef('createFoo, List(ParamInfo('a, Num.Class)), classOf[Foo], {params =>
+    context.addFun(new ExternalFunDef('createFoo, List(ParamInfo('a, Num.Kind)), Kind('Foo), {params =>
       Foo("bar", params('a).asInstanceOf[Num.NumType])
     }))
     context.addExtFun(classOf[Foo], new ExternalFunDef('invokeBaz, List(
-      ParamInfo('self, classOf[Foo]),
-      ParamInfo('a, Num.Class)
-    ), Num.Class, {params =>
+      ParamInfo('self, Kind('Foo)),
+      ParamInfo('a, Num.Kind)
+    ), Num.Kind, {params =>
       Double.box(params('self).asInstanceOf[Foo].zap + params('a).asInstanceOf[Num.NumType])
     }))
 
@@ -557,7 +557,51 @@ class ParserTest extends FunSuite {
       """.stripMargin, 5)
   }
 
-  // TODO: Function definition
+  test("Nested function definitions") {
+    shouldParseTo(
+      """
+        | var d = 1
+        | def foo(a, b, c) {
+        |   def bar(x, b) {
+        |     x + b
+        |   }
+        |
+        |   bar(a, b) + c + d
+        | }
+        |
+        | foo(2, 4, 8)
+      """.stripMargin, 15)
+
+    shouldNotCalculate(
+      """
+        | var d = 1
+        | def foo(a, b, c) {
+        |   def bar(x, b) {
+        |     x + b
+        |   }
+        |
+        |   bar(a, b) + c + d
+        | }
+        |
+        | bar(2, 4)
+      """.stripMargin)
+
+    shouldNotCalculate(
+      """
+        | var d = 1
+        | def foo(a, b, c) {
+        |   def bar(x, b) {
+        |     x + b
+        |   }
+        |
+        |   bar(a, b) + x
+        | }
+        |
+        | foo(2, 4, 8)
+        |      """.stripMargin)
+  }
+
+  // TODO: Named arguments in calls
 
   // TODO: While
 

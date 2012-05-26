@@ -1,9 +1,9 @@
 package org.shapefun.parser.defs
 
 import org.shapefun.parser.syntaxtree.Expr
-import org.shapefun.parser.{CalculationError, Context}
 import jme3tools.navigation.StringUtil
 import org.shapefun.utils.{ParameterChecker, StringUtils}
+import org.shapefun.parser.{Kind, CalculationError, Context}
 
 /**
  *
@@ -30,9 +30,9 @@ trait FunDef extends Def {
   }
 }
 
-case class ExternalFunDef(name: Symbol, parameters: List[ParamInfo], returnType: Class[_], func: Map[Symbol, AnyRef] => AnyRef) extends FunDef {
+case class ExternalFunDef(name: Symbol, parameters: List[ParamInfo], returnType: Kind, func: Map[Symbol, AnyRef] => AnyRef) extends FunDef {
   ParameterChecker.requireIsIdentifier(name, 'name)
-  ParameterChecker.requireNotNull(returnType, 'returnType)
+// TODO  ParameterChecker.requireNotNull(returnType, 'returnType)
   ParameterChecker.requireNotNull(func, 'func)
   checkParameters(parameters)
 
@@ -43,15 +43,15 @@ case class ExternalFunDef(name: Symbol, parameters: List[ParamInfo], returnType:
 /**
  *
  */
-case class ExprFunDef(name: Symbol, parameters: List[ParamInfo], body: Expr, definitionContext: Context) extends FunDef {
+case class ExprFunDef(name: Symbol, parameters: List[ParamInfo], kind: Kind, body: Expr, definitionContext: Context) extends FunDef {
   ParameterChecker.requireIsIdentifier(name, 'name)
-  ParameterChecker.requireNotNull(returnType, 'returnType)
+// TODO  ParameterChecker.requireNotNull(returnType, 'returnType)
   ParameterChecker.requireNotNull(body, 'body)
   ParameterChecker.requireNotNull(definitionContext, 'definitionContext)
   checkParameters(parameters)
 
 
-  def returnType: Class[_] = body.returnType()
+  def returnType= null// TODO  Class[_] = body.returnType()
 
   def invoke(arguments: Map[Symbol, AnyRef]): AnyRef = {
     // Create execution context that includes the parameters
@@ -81,4 +81,6 @@ case class ExprFunDef(name: Symbol, parameters: List[ParamInfo], body: Expr, def
 }
 
 
-case class ParamInfo(name: Symbol, kind: Class[_], defaultValue: Expr = null)
+case class ParamInfo(name: Symbol, kind: Kind /*kind: Class[_]*/, defaultValue: Expr = null) {
+
+}
