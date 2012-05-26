@@ -6,7 +6,7 @@ import org.shapefun.utils.ParameterChecker
 /**
  *
  */
-case class VarDefinition(identifier: Symbol, initialValue: Expr) extends SyntaxNode {
+case class VarDefinition(identifier: Symbol, initialValue: Expr) extends Expr {
   ParameterChecker.requireIsIdentifier(identifier, 'identifier)
 
   def checkTypes() {

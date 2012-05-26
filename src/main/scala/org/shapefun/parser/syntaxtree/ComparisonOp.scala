@@ -33,13 +33,16 @@ case class ComparisonOp(a: Expr, op1: Symbol, b: Expr, op2: Symbol = null, c: Ex
   }
 
   private def compare(v1: Double, op: Symbol, v2: Double): Boolean = {
+    // Use epsilon to compensate for double calculation inaccuracies.
     op match {
-      case '>   =>  v1 >  v2
-      case '>=  =>  v1 >= v2
-      case '<   =>  v1 <  v2
-      case '<=  =>  v1 <= v2
-      case '==  =>  v1 == v2
-      case '!=  =>  v1 != v2
+      case '>   =>  v1 >  v2 + Num.Epsilon
+      case '>=  =>  v1 >= v2 - Num.Epsilon
+      case '<   =>  v1 <  v2 - Num.Epsilon
+      case '<=  =>  v1 <= v2 + Num.Epsilon
+      case '==  =>  v1 >  v2 - Num.Epsilon &&
+                    v1 <  v2 + Num.Epsilon
+      case '!=  =>  v1 <  v2 - Num.Epsilon ||
+                    v1 >  v2 + Num.Epsilon
       case _ => throw new Error("Unknown comparison operator '"+op.name+"'.")
     }
   }

@@ -298,43 +298,6 @@ class ParserTest extends FunSuite {
   }
 
 
-  /* For loop alternatives
-  - Can a for loop be an expression?  What to return?
-   - Nothing intuitive -> return nothing.  To make it an expression, maybe return number of times looped?
-   //- Or maybe support yield, and return list with all yielded values?
-
-  for x in 10..-10 step 2,
-      y in rows,
-      z in [1, -1] do {
-    setPixel(x, y, x*y*z)
-    doSth( rel(x) )
-
-    // Relative position along loop range, always 0 = first element, 1 = last element, interpolate in between, if only 1 element, 0
-    relative(x) // Probably cleanest, similar syntax to function call
-    rel(x)  // shorter, more practical to use
-    ~x // very concise, but somewhat cryptic, and uses an operator char
-    x~
-    x% // more intuitive.  Some potential confusion with modulo operator, which might be good to have too
-    %x
-
-    #x - order number of the x loop - zero or one based start?
-  }
-
-  // for x = 1; x < 10; x++ do {}  // This is somewhat redundant, not so intuitive.  for x in -syntax is more useful for majority of cases.
-
-  var x = 1
-  while x < 10 do { x++}
-
-
-  Ranges:
-
-    0..10     (both inclusive, or end exclusive?)
-    0..100 step 5     // In 20 steps of 5
-    0..100 steps 5    // In 5 steps of 20
-    0..100 in 5 steps // In 5 steps of 20 - clearer syntax, but more verbose and not following same pattern
-
-
-   */
   test("For loops") {
     shouldParseTo(
       """
@@ -342,6 +305,20 @@ class ParserTest extends FunSuite {
         | for x in 0..10 do foo += 2
         | foo
       """.stripMargin, 20)
+
+    shouldParseTo(
+      """
+        | var foo = 0
+        | for x in 0..0 do foo += 2
+        | foo
+      """.stripMargin, 0)
+
+    shouldParseTo(
+      """
+        | var foo = 0
+        | for x in 0...0 do foo += 2
+        | foo
+      """.stripMargin, 2)
 
     shouldParseTo(
       """
@@ -409,23 +386,30 @@ class ParserTest extends FunSuite {
     shouldParseTo(
       """
         | var foo = 0
-        | for x in 0...10 do if x==2 then foo = %x
+        | for x in 0...10 do if x==2 then foo = x_place
         | foo
       """.stripMargin, 0.2)
 
     shouldParseTo(
       """
         | var foo = 0
-        | for x in 0...10 do if x==2 then foo = #x
+        | for x in 0...10 do if x==0 then foo = x_index
         | foo
-      """.stripMargin, 3)
+      """.stripMargin, 0)
+
+    shouldParseTo(
+      """
+        | var foo = 0
+        | for x in -10...10 do if x==-5 then foo = x_index
+        | foo
+      """.stripMargin, 5)
 
     shouldParseTo(
       """
         | var foo = 0
         | for x in 0...2, y in 0...2 do foo += x*y
         | foo
-      """.stripMargin, 14)
+      """.stripMargin, 9)
 
     shouldParseTo(
       """
@@ -434,20 +418,6 @@ class ParserTest extends FunSuite {
         | for x in 0..10 do foo += x
         | x
       """.stripMargin, 4)
-
-    shouldParseToBool(
-      """
-        | var start = 100
-        | var foo = 0
-        | for x in start...-12.5 steps 2,
-        |     y in -30+4...222-start step 0.1,
-        |     z in 1..1 do {
-        |   foo += x*%y*#z
-        |   foo += x / #y + %z + #z + z
-        | }
-        | foo != 0
-      """.stripMargin, true)
-
 
     shouldNotCalculate(
       """
@@ -458,26 +428,137 @@ class ParserTest extends FunSuite {
     shouldNotParse(
       """
         | var foo = 0
-        | for x in 0..10 do foo += # x
-        | foo
-      """.stripMargin)
-    shouldNotParse(
-      """
-        | var foo = 0
-        | for x in 0..10 do foo += % x
-        | foo
-      """.stripMargin)
-    shouldNotParse(
-      """
-        | var foo = 0
         | for x in 0..10 do
       """.stripMargin)
   }
 
+  test("Complicated loop") {
+    shouldParseToBool(
+      """
+        | var start = 100
+        | var foo = 0
+        | for x in start...-12.5 steps 2,
+        |     y in -30+4...222-start step 0.1,
+        |     z in 1..1 do {
+        |   foo += x*  y_place * z_index
+        |   foo += x / y_index + z_place + z_index + z
+        | }
+        | foo != 0
+      """.stripMargin, true)
+  }
+
+  // NOTE: if type is omitted, assume double?  Get return type from last expression in block if not defined
+  test("Function definition with type defs") {
+    shouldParseTo(
+      """
+        | def foo(a: Num, b: Num): Num {
+        |   a + b
+        | }
+        |
+        | foo(1, 2)
+      """.stripMargin, 3)
+  }
+
+  test("Function calling with named arguments") {
+    shouldParseTo(
+      """
+        | def foo(a: Num, b: Num, c: Num): Num {
+        |   a + b - c
+        | }
+        |
+        | foo(1, c=2, b=4)
+      """.stripMargin, 3)
+
+    shouldParseTo(
+      """
+        | def foo(a: Num, b: Num = 4, c: Num = 2): Num {
+        |   a + b - c
+        | }
+        |
+        | foo(1, c=2)
+      """.stripMargin, 3)
+
+    shouldNotParse(
+      """
+        | def foo(a: Num, b: Num = 4, c: Num = 2): Num {
+        |   a + b - c
+        | }
+        |
+        | foo(1, c=2, 3)
+      """.stripMargin)
+  }
+
+  test("Function definition should have own scope") {
+    shouldParseTo(
+      """
+        | var a = 10
+        | def foo(a: Num, b: Num): Num {
+        |   var c = b
+        |   a + c
+        | }
+        |
+        | a + foo(1, 2)
+      """.stripMargin, 13)
+  }
+
+  test("Function definition with default parameters") {
+    shouldParseTo(
+      """
+        | def foo(a: Num, b: Num = 4): Num {
+        |   a + b
+        | }
+        |
+        | foo(1)
+      """.stripMargin, 5)
+
+    shouldParseTo(
+      """
+        | def foo(a: Num, b = 4): Num {
+        |   a + b
+        | }
+        |
+        | foo(1)
+      """.stripMargin, 5)
+  }
+
+  test("Function definition with omitted types") {
+    shouldParseTo(
+      """
+        | def foo(a, b) {
+        |   a + b
+        | }
+        |
+        | foo(1, 2)
+      """.stripMargin, 3)
+
+    shouldParseTo(
+      """
+        | def foo(a, b = 4) {
+        |   a + b
+        | }
+        |
+        | foo(1)
+      """.stripMargin, 5)
+  }
+
+  test("Function definition with one expression") {
+    shouldParseTo(
+      """
+        | def foo(a, b) = a + b
+        |
+        | foo(1, 2)
+      """.stripMargin, 3)
+
+    shouldParseTo(
+      """
+        | def foo(a, b = 4) = a + b
+        |
+        | foo(1)
+      """.stripMargin, 5)
+  }
 
   // TODO: Function definition
 
-  // TODO: For
   // TODO: While
 
   // TODO: List, Map, Set? syntaxes
@@ -496,6 +577,8 @@ class ParserTest extends FunSuite {
   // TODO: Test for type checking
 
   // TODO: Extract language to own project
+
+  // TODO: Loop through collections with for loops
 
 
   def shouldParseTo(expression: String, expected: Double, context: Context = ContextImpl()) {

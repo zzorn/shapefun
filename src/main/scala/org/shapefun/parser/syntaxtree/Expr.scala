@@ -6,7 +6,13 @@ import org.shapefun.parser.{CalculationError, Context}
 /**
  *
  */
-trait Expr extends SyntaxNode {
+trait Expr {
+
+  def checkTypes()
+
+  def returnType(): Class[_]
+
+  def calculate(context: Context): AnyRef
 
   protected def ensureIsAssignable(required: Class[_], expression: Expr) {
     if (!required.isAssignableFrom(expression.returnType()))

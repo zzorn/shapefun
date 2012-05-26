@@ -14,10 +14,18 @@ object StepRange {
  */
 case class StepRange(start: Double, end: Double, step: Double = 1, inclusive: Boolean = false) {
 
+  def countDown: Boolean = end < start
+
   /**
    * @return value to add to start some specified times to get to the end.
    *         Same absolute value as step, but with a negative sign if end is smaller than start.
    */
-  def stepIncrement = if (start < end) step else -step
+  def stepIncrement = if (countDown) -step else step
 
+  def totalSteps: Int = {
+
+
+
+    math.floor((end - start) / step ).toInt
+  } // TODO: Correct value
 }

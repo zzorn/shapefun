@@ -8,7 +8,7 @@ import java.util.ArrayList
 /**
  *
  */
-case class ForLoop(loopVars: List[ForLoopVar], body: SyntaxNode) extends SyntaxNode {
+case class ForLoop(loopVars: List[ForLoopVar], body: Expr) extends Expr {
   def checkTypes() {
     loopVars foreach {_.checkTypes()}
   }
@@ -28,8 +28,12 @@ case class ForLoop(loopVars: List[ForLoopVar], body: SyntaxNode) extends SyntaxN
     val loopStarts = new Array[Double](numLoops)
     val loopEnds = new Array[Double](numLoops)
     val loopValues = new Array[Double](numLoops)
+    val loopCounts = new Array[Int](numLoops)
+    val loopTimes = new Array[Int](numLoops)
     val loopIncrements = new Array[Double](numLoops)
     val loopNames = new ArrayList[Symbol]()
+    val loopCountNames = new ArrayList[Symbol]()
+    val loopProgressNames = new ArrayList[Symbol]()
     var inclusive = BitSet()
     var endWhenLower = BitSet()
 
@@ -39,26 +43,38 @@ case class ForLoop(loopVars: List[ForLoopVar], body: SyntaxNode) extends SyntaxN
       val range: StepRange = loopVar.range.calculate(context).asInstanceOf[StepRange]
 
       loopContext.addVar(loopVar.name, range.start)
+      loopCounts(i) = 0
       loopStarts(i) = range.start
       loopEnds(i) = range.end
       loopValues(i) = range.start
       loopIncrements(i) = range.stepIncrement
+      loopTimes(i) = range.totalSteps
       loopNames.add(loopVar.name)
+      loopCountNames.add(Symbol(loopVar.name.name + "_index"))
+      loopProgressNames.add(Symbol(loopVar.name.name + "_place"))
       if (range.inclusive) inclusive += i
-      if (range.end < range.start) endWhenLower += i
+      if (range.countDown) endWhenLower += i
+
+      loopContext.addVar(loopCountNames.get(i), Double.box(0))
+      loopContext.addVar(loopProgressNames.get(i), Double.box(0))
 
       ranges ::= range
       i += 1
     }
 
+    // Do not run loops with any zero increments
+    if (loopIncrements exists(increment => math.abs(increment) < Num.Epsilon)) return Unit
+
     // Loop last loop once, next to last loop once for each step in the last loop, and so on
 
-    val epsilon: Double = 0.00000001
     def rollLoop(loop: Int): Boolean = {
       if (loop < 0) true
       else {
+        loopCounts(loop) = 0
         loopValues(loop) = loopStarts(loop)
-        loopContext.setVar(loopNames.get(loop), Double.box(loopValues(loop)))
+        loopContext.setVar(loopNames.get(loop),         Double.box(loopValues(loop)))
+        loopContext.setVar(loopCountNames.get(loop),    Double.box(loopCounts(loop)))
+        loopContext.setVar(loopProgressNames.get(loop), Double.box(0))
         stepLoop(loop - 1)
       }
     }
@@ -66,18 +82,18 @@ case class ForLoop(loopVars: List[ForLoopVar], body: SyntaxNode) extends SyntaxN
     def loopCompleted(loop: Int): Boolean = {
       if (endWhenLower(loop)){
         if (inclusive(loop)){
-          loopValues(loop) < loopEnds(loop) + epsilon
+          loopValues(loop) < loopEnds(loop) - Num.Epsilon
         }
         else {
-          loopValues(loop) <= loopEnds(loop) + epsilon
+          loopValues(loop) <= loopEnds(loop) + Num.Epsilon
         }
       }
       else {
         if (inclusive(loop)){
-          loopValues(loop) > loopEnds(loop) - epsilon
+          loopValues(loop) > loopEnds(loop) + Num.Epsilon
         }
         else {
-          loopValues(loop) >= loopEnds(loop) - epsilon
+          loopValues(loop) >= loopEnds(loop) - Num.Epsilon
         }
       }
     }
@@ -85,8 +101,11 @@ case class ForLoop(loopVars: List[ForLoopVar], body: SyntaxNode) extends SyntaxN
     def stepLoop(loop: Int): Boolean = {
       if (loop < 0) true
       else {
+        loopCounts(loop) += 1
         loopValues(loop) += loopIncrements(loop)
         loopContext.setVar(loopNames.get(loop), Double.box(loopValues(loop)))
+        loopContext.setVar(loopCountNames.get(loop), Double.box(loopCounts(loop)))
+        loopContext.setVar(loopProgressNames.get(loop), Double.box(1.0 * loopCounts(loop) / loopTimes(loop)))
 
         if (loopCompleted(loop)) rollLoop(loop) else false
       }

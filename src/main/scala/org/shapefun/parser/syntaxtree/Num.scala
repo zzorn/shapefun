@@ -18,6 +18,8 @@ case class Num(value: Double) extends Expr {
 }
 
 object Num {
+  val Epsilon: Double = 0.00000001
+
   type NumType = java.lang.Double
   val Class = classOf[java.lang.Double]
 }

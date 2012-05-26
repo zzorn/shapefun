@@ -24,7 +24,7 @@ class ShapeLangParser extends Parser {
   def InputLine = rule { BlockContents ~ WhiteSpace ~ EOI }
 
   def BlockContents: Rule1[Expr] = rule {
-    zeroOrMore(Statement, StatementSeparator) ~~> {(statements) => Block(statements)}  ~ optional(" ;")
+    zeroOrMore(Statement, StatementSeparator) ~~> {(statements) => BlockExpr(statements)}  ~ optional(" ;")
   }
 
   def StatementSeparator: Rule0 = rule {
@@ -32,26 +32,30 @@ class ShapeLangParser extends Parser {
     " ;"
   }
 
-  def Statement: Rule1[SyntaxNode] = rule {
+  def Statement: Rule1[Expr] = rule {
     For |
     VarDef |
     VarAssig |
+    Block |
     Expression
   }
 
-  def VarDef: Rule1[SyntaxNode] = rule {
+  def Block: Rule1[Expr] = rule {
+    " {" ~ BlockContents ~ " }"
+  }
+
+  def VarDef: Rule1[Expr] = rule {
     " var" ~ VariableName ~ " =" ~ Expression ~~> {(name: Symbol, initialValue: Expr) => VarDefinition(name, initialValue)}
   }
 
-  def VarAssig: Rule1[SyntaxNode] = rule {
+  def VarAssig: Rule1[Expr] = rule {
     VariableName ~ AssignmentOp ~ Expression ~~> {(name: Symbol, op: Symbol, value: Expr) => VarAssignment(name, op, value)}
   }
   def AssignmentOp: Rule1[Symbol] = rule {
     WhiteSpace ~ group("+=" | "-=" | "*=" | "/=" | "=") ~> {s => Symbol(s)}
   }
 
-  def For: Rule1[SyntaxNode] = rule {
-    " for" ~ oneOrMore(ForLoopVarDef, " ,") ~ " do" ~ " {" ~ BlockContents ~ " }" ~~> {(loopVars, block) => ForLoop(loopVars, block)} |
+  def For: Rule1[Expr] = rule {
     " for" ~ oneOrMore(ForLoopVarDef, " ,") ~ " do" ~ Statement ~~> {(loopVars, block) => ForLoop(loopVars, block)}
   }
   def ForLoopVarDef: Rule1[ForLoopVar] = rule {
@@ -141,8 +145,8 @@ class ShapeLangParser extends Parser {
 
 
   def If: Rule1[Expr] = rule {
-    " if" ~ Expression ~ " then" ~ Expression ~ " else" ~ Expression ~~> {(c: Expr, t: Expr, e: Expr) => IfExpr(c, t, e)} |
-    " if" ~ Expression ~ " then" ~ Expression ~~> {(c: Expr, t: Expr) => IfExpr(c, t, Const(Unit))}
+    " if" ~ Expression ~ " then" ~ Statement ~ " else" ~ Statement ~~> {(c: Expr, t: Expr, e: Expr) => IfExpr(c, t, e)} |
+    " if" ~ Expression ~ " then" ~ Statement ~~> {(c: Expr, t: Expr) => IfExpr(c, t, Const(Unit))}
   }
 
   def NegativeExpr: Rule1[Expr] = rule { " -" ~ Factor ~~> {exp => Neg(exp)} }

@@ -5,7 +5,7 @@ import org.shapefun.parser.Context
 /**
  *
  */
-case class Block(statements: List[SyntaxNode]) extends Expr {
+case class BlockExpr(statements: List[Expr]) extends Expr {
 
   def returnType(): Class[_] = if (statements.isEmpty) classOf[Unit] else statements.last.returnType()
 
