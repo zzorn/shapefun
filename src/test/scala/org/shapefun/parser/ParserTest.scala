@@ -598,18 +598,18 @@ class ParserTest extends FunSuite {
         | }
         |
         | foo(2, 4, 8)
-        |      """.stripMargin)
+      """.stripMargin)
   }
 
   // TODO: Named arguments in calls
 
   // TODO: While
 
+  // TODO: Function parameters, closures?
+
   // TODO: List, Map, Set? syntaxes
 
-  // TODO: Instead of class instantiation, call externally defined functions that create the necessary class (e.g. model, color, etc)
-
-  // TODO: Function parameters, closures?
+  // TODO: Loop through collections with for loops
 
   // TODO: Enum types? / static object?
 
@@ -622,7 +622,6 @@ class ParserTest extends FunSuite {
 
   // TODO: Extract language to own project
 
-  // TODO: Loop through collections with for loops
 
 
   def shouldParseTo(expression: String, expected: Double, context: Context = ContextImpl()) {
