@@ -1,6 +1,7 @@
 package org.shapefun.parser
 
-import func.{ParameterInfo, SimpleFunc, Func, MathFunctions}
+import defs.{ParamInfo, ExternalFunDef}
+import org.shapefun.mathfuncs.MathContext
 import org.scalatest.FunSuite
 import org.scalatest.Assertions._
 import org.parboiled.errors.ParsingException
@@ -95,33 +96,34 @@ class ParserTest extends FunSuite {
   }
 
   test("External variable") {
-    shouldParseTo("a", 5, SimpleContext(Map('a -> Double.box(5.0))))
-    shouldParseTo("-foo + bar * 2", 4, SimpleContext(Map('foo -> Double.box(2.0), 'bar -> Double.box(3.0))))
+    val context1 = ContextImpl()
+    context1.addVal('a, 5)
+    shouldParseTo("a", 5, context1)
+
+    val context2 = ContextImpl()
+    context2.addVal('foo, 2.0)
+    context2.addVal('bar, 3.0)
+    shouldParseTo("-foo + bar * 2", 4, context2)
     shouldNotCalculate("foobar")
   }
 
   test("External function") {
-    shouldParseTo("abs(-1)", 1, SimpleContext(functions = MathFunctions.functions))
-    shouldParseTo(" - pow( 2.0, 3.0 ) * abs( -2)", -16, SimpleContext(functions = MathFunctions.functions))
+
+    shouldParseTo("abs(-1)", 1, MathContext.context)
+    shouldParseTo(" - pow( 2.0, 3.0 ) * abs( -2)", -16, MathContext.context)
   }
 
   test("Calling function on object") {
-    val context: SimpleContext = SimpleContext(Map(),
-      List(SimpleFunc('createFoo,
-        List(ParameterInfo('a, Num.Class)),
-        classOf[Foo],
-        {params =>
-          Foo("bar", params(0).asInstanceOf[Num.NumType])
-        })),
-
-      List(SimpleClassInfo(classOf[Foo],
-        List(SimpleFunc('invokeBaz, List(ParameterInfo('a, Num.Class)),
-        Num.Class,
-        {params =>
-          Double.box(params(0).asInstanceOf[Foo].zap + params(1).asInstanceOf[Num.NumType])
-        }
-        ))))
-    )
+    val context = ContextImpl()
+    context.addFun(new ExternalFunDef('createFoo, List(ParamInfo('a, Num.Class)), classOf[Foo], {params =>
+      Foo("bar", params('a).asInstanceOf[Num.NumType])
+    }))
+    context.addExtFun(classOf[Foo], new ExternalFunDef('invokeBaz, List(
+      ParamInfo('self, classOf[Foo]),
+      ParamInfo('a, Num.Class)
+    ), Num.Class, {params =>
+      Double.box(params('self).asInstanceOf[Foo].zap + params('a).asInstanceOf[Num.NumType])
+    }))
 
     shouldParseToObj("createFoo(3)", Foo("bar", 3), context)
     shouldParseTo("createFoo(4).invokeBaz(3)", 7, context)
@@ -217,43 +219,6 @@ class ParserTest extends FunSuite {
     shouldNotParse("1 2 3")
   }
 
-  /* For loop alternatives
-  - Can a for loop be an expression?  What to return?
-   - Nothing intuitive -> return nothing.  To make it an expression, maybe return number of times looped?
-   //- Or maybe support yield, and return list with all yielded values?
-
-  for x in 10..-10 step 2,
-      y in rows,
-      z in [1, -1] do {
-    setPixel(x, y, x*y*z)
-    doSth( rel(x) )
-
-    // Relative position along loop range, always 0 = first element, 1 = last element, interpolate in between, if only 1 element, 0
-    relative(x) // Probably cleanest, similar syntax to function call
-    rel(x)  // shorter, more practical to use
-    ~x // very concise, but somewhat cryptic, and uses an operator char
-    x~
-    x% // more intuitive.  Some potential confusion with modulo operator, which might be good to have too
-    %x
-
-  }
-
-  // for x = 1; x < 10; x++ do {}  // This is somewhat redundant, not so intuitive.  for x in -syntax is more useful for majority of cases.
-
-  var x = 1
-  while x < 10 do { x++}
-
-
-  Ranges:
-
-    0..10     (both inclusive, or end exclusive?)
-    0..100 step 5     // In 20 steps of 5
-    0..100 steps 5    // In 5 steps of 20
-    0..100 in 5 steps // In 5 steps of 20 - clearer syntax, but more verbose and not following same pattern
-
-
-   */
-
   test("Variable declaration and assignment") {
     shouldParseTo(
       """
@@ -333,6 +298,182 @@ class ParserTest extends FunSuite {
   }
 
 
+  /* For loop alternatives
+  - Can a for loop be an expression?  What to return?
+   - Nothing intuitive -> return nothing.  To make it an expression, maybe return number of times looped?
+   //- Or maybe support yield, and return list with all yielded values?
+
+  for x in 10..-10 step 2,
+      y in rows,
+      z in [1, -1] do {
+    setPixel(x, y, x*y*z)
+    doSth( rel(x) )
+
+    // Relative position along loop range, always 0 = first element, 1 = last element, interpolate in between, if only 1 element, 0
+    relative(x) // Probably cleanest, similar syntax to function call
+    rel(x)  // shorter, more practical to use
+    ~x // very concise, but somewhat cryptic, and uses an operator char
+    x~
+    x% // more intuitive.  Some potential confusion with modulo operator, which might be good to have too
+    %x
+
+    #x - order number of the x loop - zero or one based start?
+  }
+
+  // for x = 1; x < 10; x++ do {}  // This is somewhat redundant, not so intuitive.  for x in -syntax is more useful for majority of cases.
+
+  var x = 1
+  while x < 10 do { x++}
+
+
+  Ranges:
+
+    0..10     (both inclusive, or end exclusive?)
+    0..100 step 5     // In 20 steps of 5
+    0..100 steps 5    // In 5 steps of 20
+    0..100 in 5 steps // In 5 steps of 20 - clearer syntax, but more verbose and not following same pattern
+
+
+   */
+  test("For loops") {
+    shouldParseTo(
+      """
+        | var foo = 0
+        | for x in 0..10 do foo += 2
+        | foo
+      """.stripMargin, 20)
+
+    shouldParseTo(
+      """
+        | var foo = 0
+        | for x in 0..10,
+        |     y in 0..10 do foo += 2
+        | foo
+      """.stripMargin, 200)
+
+    shouldParseTo(
+      """
+        | var foo = 0
+        | for x in 0..10,
+        |     y in 0..10,
+        |     z in 0..10 do foo += 2
+        | foo
+      """.stripMargin, 2000)
+
+    shouldParseTo(
+      """
+        | var foo = 0
+        | var bar = 1
+        | for x in 0..10 do {
+        |   foo += 2
+        |   bar += 3
+        | }
+        | foo + bar
+      """.stripMargin, 51)
+
+    shouldParseTo(
+      """
+        | var foo = 0
+        | for x in 0..10 step 2 do foo++
+        | foo
+      """.stripMargin, 5)
+
+    shouldParseTo(
+      """
+        | var foo = 0
+        | for x in 0...10 steps 5 do foo++
+        | foo
+      """.stripMargin, 5)
+
+    shouldParseTo(
+      """
+        | var foo = 0
+        | for x in 0..10 steps 5 do foo++
+        | foo
+      """.stripMargin, 5)
+
+    shouldParseTo(
+      """
+        | var foo = 0
+        | for x in 0..10 steps 3 do foo++
+        | foo
+      """.stripMargin, 3)
+
+    shouldParseTo(
+      """
+        | var foo = 0
+        | for x in 0..1 step 0.1 do foo++
+        | foo
+      """.stripMargin, 10)
+
+    shouldParseTo(
+      """
+        | var foo = 0
+        | for x in 0...10 do if x==2 then foo = %x
+        | foo
+      """.stripMargin, 0.2)
+
+    shouldParseTo(
+      """
+        | var foo = 0
+        | for x in 0...10 do if x==2 then foo = #x
+        | foo
+      """.stripMargin, 3)
+
+    shouldParseTo(
+      """
+        | var foo = 0
+        | for x in 0...2, y in 0...2 do foo += x*y
+        | foo
+      """.stripMargin, 14)
+
+    shouldParseTo(
+      """
+        | var foo = 0
+        | var x = 4
+        | for x in 0..10 do foo += x
+        | x
+      """.stripMargin, 4)
+
+    shouldParseToBool(
+      """
+        | var start = 100
+        | var foo = 0
+        | for x in start...-12.5 steps 2,
+        |     y in -30+4...222-start step 0.1,
+        |     z in 1..1 do {
+        |   foo += x*%y*#z
+        |   foo += x / #y + %z + #z + z
+        | }
+        | foo != 0
+      """.stripMargin, true)
+
+
+    shouldNotCalculate(
+      """
+        | var foo = 0
+        | for x in 0..10 do foo += x
+        | x
+      """.stripMargin)
+    shouldNotParse(
+      """
+        | var foo = 0
+        | for x in 0..10 do foo += # x
+        | foo
+      """.stripMargin)
+    shouldNotParse(
+      """
+        | var foo = 0
+        | for x in 0..10 do foo += % x
+        | foo
+      """.stripMargin)
+    shouldNotParse(
+      """
+        | var foo = 0
+        | for x in 0..10 do
+      """.stripMargin)
+  }
+
 
   // TODO: Function definition
 
@@ -357,7 +498,7 @@ class ParserTest extends FunSuite {
   // TODO: Extract language to own project
 
 
-  def shouldParseTo(expression: String, expected: Double, context: Context = SimpleContext()) {
+  def shouldParseTo(expression: String, expected: Double, context: Context = ContextImpl()) {
     val parser = new ShapeLangParser()
     val expr: Expr = parser.parse(expression)
     val result: Any = expr.calculate(context)
@@ -373,11 +514,11 @@ class ParserTest extends FunSuite {
     }
   }
 
-  def shouldParseToBool(expression: String, expected: Boolean, context: Context = SimpleContext()) {
+  def shouldParseToBool(expression: String, expected: Boolean, context: Context = ContextImpl()) {
     shouldParseToObj(expression, Boolean.box(expected), context)
   }
 
-  def shouldParseToObj(expression: String, expected: AnyRef, context: Context = SimpleContext()) {
+  def shouldParseToObj(expression: String, expected: AnyRef, context: Context = ContextImpl()) {
     val parser = new ShapeLangParser()
     val expr: Expr = parser.parse(expression)
     val result: Any = expr.calculate(context)
@@ -393,7 +534,7 @@ class ParserTest extends FunSuite {
     intercept[ParsingException](parser.parse(expression))
   }
 
-  def shouldNotCalculate(expression: String, context: Context = SimpleContext()) {
+  def shouldNotCalculate(expression: String, context: Context = ContextImpl()) {
     val parser = new ShapeLangParser()
     val expr: Expr = parser.parse(expression)
     intercept[Exception](expr.calculate(context))

@@ -25,7 +25,7 @@ case class VarAssignment(identifier: Symbol, assignmentOp: Symbol, valueExpr: Ex
 
     val newValue = if (assignmentOp == '=) value
     else {
-      val oldValue = Double.unbox(context.getVariable(identifier))
+      val oldValue = Double.unbox(context.getVar(identifier))
       val numValue = Double.unbox(value)
       Double.box(assignmentOp match {
         case '+= => oldValue + numValue
@@ -35,7 +35,7 @@ case class VarAssignment(identifier: Symbol, assignmentOp: Symbol, valueExpr: Ex
       })
     }
 
-    context.setVariable(identifier, newValue)
+    context.setVar(identifier, newValue)
 
     newValue
   }

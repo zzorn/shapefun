@@ -53,4 +53,15 @@ object StringUtils {
     }
   }
 
+  /**
+   * True if s is a java style identifier (starts with letter, followed by numbers and letters, should be non-empty).
+   */
+  def isIdentifier(s: Symbol): Boolean = {
+    if (s == null || s.name == null || s.name.length <= 0) false
+    else if (!Character.isJavaIdentifierStart(s.name.charAt(0))) false
+    else {
+      s.name forall Character.isJavaIdentifierPart
+    }
+  }
+
 }

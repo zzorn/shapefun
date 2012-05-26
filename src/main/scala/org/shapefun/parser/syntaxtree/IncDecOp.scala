@@ -19,10 +19,10 @@ case class IncDecOp(identifier: Symbol, increment: Boolean) extends Expr {
   }
 
   def calculate(context: Context): AnyRef = {
-    val oldBoxedVal: AnyRef = context.getVariable(identifier)
+    val oldBoxedVal: AnyRef = context.getVar(identifier)
     val oldValue = Double.unbox(oldBoxedVal)
     val newValue = Double.box(if (increment) oldValue + 1 else oldValue - 1)
-    context.setVariable(identifier, newValue)
+    context.setVar(identifier, newValue)
     oldBoxedVal
   }
 }

@@ -6,7 +6,7 @@ import org.shapefun.utils.ParameterChecker
 /**
  *
  */
-case class VarRefExpr(identifier: Symbol) extends Expr {
+case class ValueRefExpr(identifier: Symbol) extends Expr {
   ParameterChecker.requireIsIdentifier(identifier, 'identifier)
 
   override def checkTypes() {}
@@ -17,7 +17,7 @@ case class VarRefExpr(identifier: Symbol) extends Expr {
   }
 
   def calculate(context: Context): AnyRef = {
-    context.getVariable(identifier)
+    context.getValue(identifier)
   }
 
 }

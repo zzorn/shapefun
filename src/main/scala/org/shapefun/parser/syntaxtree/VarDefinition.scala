@@ -17,7 +17,7 @@ case class VarDefinition(identifier: Symbol, initialValue: Expr) extends SyntaxN
 
   def calculate(context: Context): AnyRef = {
     val value = initialValue.calculate(context)
-    context.addVariable(identifier, value)
+    context.addVar(identifier, value)
     Unit
   }
 }

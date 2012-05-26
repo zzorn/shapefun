@@ -33,6 +33,7 @@ class ShapeLangParser extends Parser {
   }
 
   def Statement: Rule1[SyntaxNode] = rule {
+    For |
     VarDef |
     VarAssig |
     Expression
@@ -49,6 +50,13 @@ class ShapeLangParser extends Parser {
     WhiteSpace ~ group("+=" | "-=" | "*=" | "/=" | "=") ~> {s => Symbol(s)}
   }
 
+  def For: Rule1[SyntaxNode] = rule {
+    " for" ~ oneOrMore(ForLoopVarDef, " ,") ~ " do" ~ " {" ~ BlockContents ~ " }" ~~> {(loopVars, block) => ForLoop(loopVars, block)} |
+    " for" ~ oneOrMore(ForLoopVarDef, " ,") ~ " do" ~ Statement ~~> {(loopVars, block) => ForLoop(loopVars, block)}
+  }
+  def ForLoopVarDef: Rule1[ForLoopVar] = rule {
+    VariableName ~ " in" ~ Expression ~~> {(name: Symbol, range: Expr) => ForLoopVar(name, range)}
+  }
 
   def Expression: Rule1[Expr] = OrExpr
 
@@ -133,7 +141,8 @@ class ShapeLangParser extends Parser {
 
 
   def If: Rule1[Expr] = rule {
-    " if" ~ Expression ~ " then" ~ Expression ~ " else" ~ Expression ~~> {(c: Expr, t: Expr, e: Expr) => IfExpr(c, t, e)}
+    " if" ~ Expression ~ " then" ~ Expression ~ " else" ~ Expression ~~> {(c: Expr, t: Expr, e: Expr) => IfExpr(c, t, e)} |
+    " if" ~ Expression ~ " then" ~ Expression ~~> {(c: Expr, t: Expr) => IfExpr(c, t, Const(Unit))}
   }
 
   def NegativeExpr: Rule1[Expr] = rule { " -" ~ Factor ~~> {exp => Neg(exp)} }
@@ -143,7 +152,7 @@ class ShapeLangParser extends Parser {
 
   def Parens: Rule1[Expr] = rule { " (" ~ Expression ~ " )" }
 
-  def VariableRef: Rule1[Expr] = rule { VariableName ~~> {s => VarRefExpr(s)} }
+  def VariableRef: Rule1[Expr] = rule { VariableName ~~> {s => ValueRefExpr(s)} }
 
   def Call: Rule1[Expr] = rule {
     FirstCall ~ zeroOrMore(
