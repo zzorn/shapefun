@@ -1,7 +1,7 @@
 package org.shapefun.parser.syntaxtree
 
-import org.shapefun.parser.{CalculationError, Context}
 import scala.Predef._
+import org.shapefun.parser._
 
 
 /**
@@ -9,14 +9,17 @@ import scala.Predef._
  */
 case class NumberOp(operation: Symbol, left: Expr, right: Expr) extends Expr {
 
-  override def checkTypes() {
-    left.checkTypes()
-    right.checkTypes()
-    ensureIsAssignable(Num.Class, left)
-    ensureIsAssignable(Num.Class, right)
+  val allowedOps = Set('plus, 'minus, 'mul, 'div)
+
+  protected def doCalculateTypes(staticContext: StaticContext): Kind = {
+    ensureExprIsAssignableTo(NumKind, left, staticContext)
+    ensureExprIsAssignableTo(NumKind, right, staticContext)
+
+    if (!allowedOps.contains(operation)) reportTypeError("Operator '"+operation.name+"' is not allowed", this, staticContext)
+
+    NumKind
   }
 
-  def returnType() = Num.Class
 
   def calculate(context: Context): AnyRef = {
     val leftVal = left.calculate(context)
@@ -27,7 +30,6 @@ case class NumberOp(operation: Symbol, left: Expr, right: Expr) extends Expr {
       case 'minus => Double.box( Double.unbox(leftVal) - Double.unbox(rightVal))
       case 'mul   => Double.box( Double.unbox(leftVal) * Double.unbox(rightVal))
       case 'div   => Double.box( Double.unbox(leftVal) / Double.unbox(rightVal))
-      case _ => throw new Error("Unknown operator '"+operation.name+"'.")
     }
   }
 

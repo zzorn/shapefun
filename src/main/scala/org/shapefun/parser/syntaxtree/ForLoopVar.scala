@@ -6,7 +6,4 @@ import org.shapefun.utils.StepRange
  *
  */
 case class ForLoopVar(name: Symbol, range: Expr) {
-  def checkTypes() {
-    range.checkTypes()
-  }
 }

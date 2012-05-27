@@ -1,6 +1,7 @@
 package org.shapefun.parser
 
 import defs._
+import syntaxtree.StaticContext
 
 
 /**
@@ -57,5 +58,7 @@ trait Context {
    * @return a new context with this context as parent
    */
   def createSubContext(): Context
+
+  def createStaticContext(): StaticContext
 
 }

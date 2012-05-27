@@ -1,19 +1,28 @@
 package org.shapefun.parser.syntaxtree
 
-import org.shapefun.parser.Context
 import org.shapefun.utils.StepRange
 import collection.immutable.BitSet
 import java.util.ArrayList
+import org.shapefun.parser.{UnitKind, JavaKind, Kind, Context}
 
 /**
  *
  */
 case class ForLoop(loopVars: List[ForLoopVar], body: Expr) extends Expr {
-  def checkTypes() {
-    loopVars foreach {_.checkTypes()}
-  }
 
-  def returnType() = classOf[Unit]
+
+  protected def doCalculateTypes(staticContext: StaticContext): Kind = {
+
+    // Check loop ranges
+    loopVars foreach { loopVar =>
+      ensureExprIsAssignableTo(JavaKind(classOf[RangeExpr]), loopVar.range, staticContext)
+    }
+
+    // Check body
+    body.calculateTypes(staticContext)
+
+    UnitKind
+  }
 
   def calculate(context: Context): AnyRef = {
     // Create loop vars in subcontext

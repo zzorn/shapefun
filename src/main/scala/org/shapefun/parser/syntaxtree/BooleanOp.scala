@@ -1,20 +1,23 @@
 package org.shapefun.parser.syntaxtree
 
-import org.shapefun.parser.Context
+import org.shapefun.parser.{BoolKind, NumKind, Kind, Context}
+
 
 /**
  *
  */
 case class BooleanOp(a: Expr, op1: Symbol, b: Expr) extends Expr {
 
-  override def checkTypes() {
-    a.checkTypes()
-    b.checkTypes()
-    ensureIsAssignable(Num.Class, a)
-    ensureIsAssignable(Num.Class, b)
-  }
+  val allowedOps = Set('and, 'or, 'xor)
 
-  def returnType() = Bool.Class
+  protected def doCalculateTypes(staticContext: StaticContext): Kind = {
+    ensureExprIsAssignableTo(BoolKind, a, staticContext)
+    ensureExprIsAssignableTo(BoolKind, b, staticContext)
+
+    if (!allowedOps.contains(op1)) reportTypeError("Operator '"+op1.name+"' is not allowed", this, staticContext)
+
+    BoolKind
+  }
 
   def calculate(context: Context): AnyRef = {
     val aVal = Boolean.unbox(a.calculate(context))
@@ -28,7 +31,6 @@ case class BooleanOp(a: Expr, op1: Symbol, b: Expr) extends Expr {
       case 'and =>  v1 && v2
       case 'or  =>  v1 || v2
       case 'xor =>  (!v1 && v2) || (v1 && !v2)
-      case _ => throw new Error("Unknown comparison operator '"+op.name+"'.")
     }
   }
 

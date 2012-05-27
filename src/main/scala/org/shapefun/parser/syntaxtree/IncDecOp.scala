@@ -1,7 +1,7 @@
 package org.shapefun.parser.syntaxtree
 
-import org.shapefun.parser.Context
 import org.shapefun.utils.ParameterChecker
+import org.shapefun.parser.{NumKind, Kind, Context}
 
 /**
  *
@@ -9,13 +9,11 @@ import org.shapefun.utils.ParameterChecker
 case class IncDecOp(identifier: Symbol, increment: Boolean) extends Expr {
   ParameterChecker.requireIsIdentifier(identifier, 'identifier)
 
-  def checkTypes() {
-    // TODO: Get variable type from type checking context, check that it is numeric
-  }
+  protected def doCalculateTypes(staticContext: StaticContext): Kind = {
+    // TODO: Get specified var from context, check that it is a var
+    // TODO: Get type of specified var from context, check that it is num
 
-  def returnType(): Class[_] = {
-    // TODO: Get variable type from type checking context
-    null
+    NumKind
   }
 
   def calculate(context: Context): AnyRef = {

@@ -1,19 +1,22 @@
 package org.shapefun.parser.syntaxtree
 
-import org.shapefun.parser.Context
 import org.shapefun.utils.ParameterChecker
+import org.shapefun.parser.{UnitKind, Kind, Context}
 
 /**
  *
  */
-case class VarDefinition(identifier: Symbol, initialValue: Expr) extends Expr {
+case class VarDefinition(identifier: Symbol, initialValue: Expr, var varType: Kind = null) extends Expr {
   ParameterChecker.requireIsIdentifier(identifier, 'identifier)
 
-  def checkTypes() {
-    initialValue.checkTypes()
-  }
+  protected def doCalculateTypes(staticContext: StaticContext): Kind = {
+    // TODO: Add var to context?
 
-  def returnType(): Class[_] = initialValue.returnType()
+    if (varType != null) ensureExprIsAssignableTo(varType, initialValue, staticContext)
+    else varType = initialValue.calculateTypes(staticContext)
+
+    UnitKind
+  }
 
   def calculate(context: Context): AnyRef = {
     val value = initialValue.calculate(context)

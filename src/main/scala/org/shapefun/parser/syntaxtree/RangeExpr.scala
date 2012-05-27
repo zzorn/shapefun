@@ -1,25 +1,21 @@
 package org.shapefun.parser.syntaxtree
 
-import org.shapefun.parser.Context
 import org.shapefun.utils.StepRange
+import org.shapefun.parser.{JavaKind, NumKind, Kind, Context}
 
 /**
  *
  */
 case class RangeExpr(start:Expr, end: Expr, inclusive: Boolean = false, step: Expr = null, steps: Expr = null) extends Expr {
 
-  def returnType() = classOf[StepRange]
 
-  def checkTypes() {
-    start.checkTypes()
-    end.checkTypes()
-    if (step != null) step.checkTypes()
-    if (steps != null) steps.checkTypes()
+  protected def doCalculateTypes(staticContext: StaticContext): Kind = {
+    ensureExprIsAssignableTo(NumKind, start, staticContext)
+    ensureExprIsAssignableTo(NumKind, end, staticContext)
+    if (step != null) ensureExprIsAssignableTo(NumKind, step, staticContext)
+    if (steps != null) ensureExprIsAssignableTo(NumKind, steps, staticContext)
 
-    ensureIsAssignable(Num.Class, start)
-    ensureIsAssignable(Num.Class, end)
-    if (step != null) ensureIsAssignable(Num.Class, step)
-    if (steps != null) ensureIsAssignable(Num.Class, steps)
+    JavaKind(classOf[StepRange])
   }
 
   def calculate(context: Context): AnyRef = {

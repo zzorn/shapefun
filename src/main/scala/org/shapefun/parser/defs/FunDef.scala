@@ -81,6 +81,6 @@ case class ExprFunDef(name: Symbol, parameters: List[ParamInfo], kind: Kind, bod
 }
 
 
-case class ParamInfo(name: Symbol, kind: Kind /*kind: Class[_]*/, defaultValue: Expr = null) {
+case class ParamInfo(name: Symbol, kind: Kind, defaultValue: Expr = null) {
 
 }

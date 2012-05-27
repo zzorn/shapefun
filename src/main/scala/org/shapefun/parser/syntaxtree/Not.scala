@@ -1,18 +1,17 @@
 package org.shapefun.parser.syntaxtree
 
-import org.shapefun.parser.Context
+import org.shapefun.parser.{BoolKind, NumKind, Kind, Context}
+
 
 /**
  *
  */
 case class Not(expr: Expr) extends Expr {
 
-  override def checkTypes() {
-    expr.checkTypes()
-    ensureIsAssignable(Bool.Class, expr)
+  protected def doCalculateTypes(staticContext: StaticContext): Kind = {
+    ensureExprIsAssignableTo(BoolKind, expr, staticContext)
+    BoolKind
   }
-
-  def returnType() = Bool.Class
 
   def calculate(context: Context): AnyRef = {
     val value = expr.calculate(context)

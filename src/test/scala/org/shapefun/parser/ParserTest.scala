@@ -115,11 +115,12 @@ class ParserTest extends FunSuite {
 
   test("Calling function on object") {
     val context = ContextImpl()
-    context.addFun(new ExternalFunDef('createFoo, List(ParamInfo('a, Num.Kind)), Kind('Foo), {params =>
+    val fooKind: JavaKind = JavaKind(classOf[Foo])
+    context.addFun(new ExternalFunDef('createFoo, List(ParamInfo('a, Num.Kind)), fooKind, {params =>
       Foo("bar", params('a).asInstanceOf[Num.NumType])
     }))
     context.addExtFun(classOf[Foo], new ExternalFunDef('invokeBaz, List(
-      ParamInfo('self, Kind('Foo)),
+      ParamInfo('self, fooKind),
       ParamInfo('a, Num.Kind)
     ), Num.Kind, {params =>
       Double.box(params('self).asInstanceOf[Foo].zap + params('a).asInstanceOf[Num.NumType])
@@ -478,14 +479,15 @@ class ParserTest extends FunSuite {
         | foo(1, c=2)
       """.stripMargin, 3)
 
-    shouldNotParse(
+    shouldParseTo(
       """
-        | def foo(a: Num, b: Num = 4, c: Num = 2): Num {
+        | def foo(a: Num= 1, b: Num = 2, c: Num = 4): Num {
         |   a + b - c
         | }
         |
-        | foo(1, c=2, 3)
-      """.stripMargin)
+        | foo(100, c=200, 400)
+      """.stripMargin, 300)
+
   }
 
   test("Function definition should have own scope") {
@@ -601,6 +603,10 @@ class ParserTest extends FunSuite {
       """.stripMargin)
   }
 
+  // TODO: 3D model generation, with some utility methods
+
+  // TODO: Flesh out math lib, e.g. lerps, tweening, random.
+
   // TODO: Named arguments in calls
 
   // TODO: While
@@ -611,22 +617,23 @@ class ParserTest extends FunSuite {
 
   // TODO: Loop through collections with for loops
 
-  // TODO: Enum types? / static object?
-
   // TODO: Imports
 
+  // TODO: Deduct type from values if type info is omitted
 
   // TODO: Test for not allowing too many parameters
 
   // TODO: Test for type checking
 
+  // TODO: Enum types? / static object?
+
   // TODO: Extract language to own project
 
 
 
-  def shouldParseTo(expression: String, expected: Double, context: Context = ContextImpl()) {
-    val parser = new ShapeLangParser()
-    val expr: Expr = parser.parse(expression)
+  def shouldParseTo(expression: String, expected: Double, context: Context = ContextImpl(), definedKinds: Map[Symbol, Kind] = Map()) {
+    val parser = new ShapeLangParser(definedKinds)
+    val expr: Expr = parser.parse(expression, context)
     val result: Any = expr.calculate(context)
 
 
@@ -640,13 +647,13 @@ class ParserTest extends FunSuite {
     }
   }
 
-  def shouldParseToBool(expression: String, expected: Boolean, context: Context = ContextImpl()) {
-    shouldParseToObj(expression, Boolean.box(expected), context)
+  def shouldParseToBool(expression: String, expected: Boolean, context: Context = ContextImpl(), definedKinds: Map[Symbol, Kind] = Map()) {
+    shouldParseToObj(expression, Boolean.box(expected), context, definedKinds)
   }
 
-  def shouldParseToObj(expression: String, expected: AnyRef, context: Context = ContextImpl()) {
-    val parser = new ShapeLangParser()
-    val expr: Expr = parser.parse(expression)
+  def shouldParseToObj(expression: String, expected: AnyRef, context: Context = ContextImpl(), definedKinds: Map[Symbol, Kind] = Map()) {
+    val parser = new ShapeLangParser(definedKinds)
+    val expr: Expr = parser.parse(expression, context)
     val result: Any = expr.calculate(context)
 
     // Print some debugging help on fail
@@ -655,14 +662,14 @@ class ParserTest extends FunSuite {
     assert(result === expected)
   }
 
-  def shouldNotParse(expression: String) {
-    val parser = new ShapeLangParser()
-    intercept[ParsingException](parser.parse(expression))
+  def shouldNotParse(expression: String, definedKinds: Map[Symbol, Kind] = Map()) {
+    val parser = new ShapeLangParser(definedKinds)
+    intercept[ParsingException](parser.parse(expression, new ContextImpl()))
   }
 
-  def shouldNotCalculate(expression: String, context: Context = ContextImpl()) {
-    val parser = new ShapeLangParser()
-    val expr: Expr = parser.parse(expression)
+  def shouldNotCalculate(expression: String, context: Context = ContextImpl(), definedKinds: Map[Symbol, Kind] = Map()) {
+    val parser = new ShapeLangParser(definedKinds)
+    val expr: Expr = parser.parse(expression, context)
     intercept[Exception](expr.calculate(context))
   }
 

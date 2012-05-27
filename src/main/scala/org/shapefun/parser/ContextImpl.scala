@@ -2,6 +2,7 @@ package org.shapefun.parser
 
 import defs.{VarDef, Def, FunDef}
 import org.shapefun.utils.ParameterChecker
+import syntaxtree.StaticContext
 
 
 /**
@@ -66,5 +67,5 @@ case class ContextImpl(parent: Context = null) extends Context {
     new ContextImpl(this)
   }
 
-
+  def createStaticContext() = new StaticContext()
 }

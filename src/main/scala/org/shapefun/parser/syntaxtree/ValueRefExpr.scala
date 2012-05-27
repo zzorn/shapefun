@@ -1,7 +1,7 @@
 package org.shapefun.parser.syntaxtree
 
-import org.shapefun.parser.Context
 import org.shapefun.utils.ParameterChecker
+import org.shapefun.parser.{AnyRefKind, Kind, Context}
 
 /**
  *
@@ -9,10 +9,9 @@ import org.shapefun.utils.ParameterChecker
 case class ValueRefExpr(identifier: Symbol) extends Expr {
   ParameterChecker.requireIsIdentifier(identifier, 'identifier)
 
-  override def checkTypes() {}
+  protected def doCalculateTypes(staticContext: StaticContext): Kind = {
+    // TODO: Get type of val from static context?
 
-  def returnType(): Class[_] = {
-    // TODO: Can this be calculated? -> need to calculate the context
     null
   }
 

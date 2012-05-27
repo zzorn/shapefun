@@ -1,6 +1,6 @@
 package org.shapefun.parser.syntaxtree
 
-import org.shapefun.parser.{CalculationError, Context}
+import org.shapefun.parser.{UnitKind, Kind, CalculationError, Context}
 
 
 /**
@@ -8,21 +8,44 @@ import org.shapefun.parser.{CalculationError, Context}
  */
 trait Expr {
 
-  def checkTypes()
+  private var _kind: Kind = null
 
-  def returnType(): Class[_]
+  final def kind: Kind = _kind
+
+  final def calculateTypes(staticContext: StaticContext): Kind = {
+    val k = kind
+    if (k != null) k
+    else {
+      _kind = doCalculateTypes(staticContext: StaticContext)
+      _kind
+    }
+  }
+
+  protected def doCalculateTypes(staticContext: StaticContext): Kind //= UnitKind
 
   def calculate(context: Context): AnyRef
 
-  protected def ensureIsAssignable(required: Class[_], expression: Expr) {
+  def ensureExprIsAssignableTo(expectedKind: Kind, expr: Expr, staticContext: StaticContext): Kind = {
+    val kind = expr.calculateTypes(staticContext)
+    ensureKindIsAssignableToKind(expectedKind, kind, expr, staticContext)
+  }
+
+  def ensureKindIsAssignableToKind(expectedKind: Kind, kind: Kind, expr: Expr, staticContext: StaticContext): Kind = {
+    if (!expectedKind.isAssignableFrom(kind)) reportTypeError("Expression should be of type '" + expectedKind + "', but it was of type '" + kind + "'", expr, staticContext)
+    kind
+  }
+
+  def reportTypeError(msg: String, problematicExpr: Expr, staticContext: StaticContext) {
+    throw new CalculationError("Error while checking types: " + msg + ", at: " + problematicExpr)
+  }
+
+  /*
+  protected def ensureIsAssignable(required: Kind, expression: Expr) {
     if (!required.isAssignableFrom(expression.returnType()))
       throw new CalculationError("Expected type assignable to '"+required+"', but got " + expression.returnType())
   }
+  */
 
-  protected def getCommonSuperType(type1: Class[_], type2: Class[_]): Class[_] = {
-    if (type1.isAssignableFrom(type2)) type1
-    else if (type2.isAssignableFrom(type1)) type2
-    else classOf[Object] // TODO: Find closest common super type
-  }
+
 
 }

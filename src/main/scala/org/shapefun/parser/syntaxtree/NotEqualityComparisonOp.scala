@@ -6,7 +6,7 @@ import org.shapefun.parser._
 /**
  *
  */
-case class EqualityComparisonOp(a: Expr, b: Expr) extends Expr {
+case class NotEqualityComparisonOp(a: Expr, b: Expr) extends Expr {
 
   private var useNumCompare = false
 
@@ -28,12 +28,13 @@ case class EqualityComparisonOp(a: Expr, b: Expr) extends Expr {
       // For numbers, perform equality matching using epsilon, to account for drift-off and rounding errors in double calculations
       val n1 = Double.unbox(v1)
       val n2 = Double.unbox(v2)
-      Boolean.box(
-        n1 >  n2 - Num.Epsilon &&
-        n1 <  n2 + Num.Epsilon)
+      Boolean.box(n1 < n2 - Num.Epsilon ||
+                  n1 > n2 + Num.Epsilon)
     }
     else {
-      Boolean.box(v1 == v2)
+      Boolean.box(v1 != v2)
     }
   }
+
+
 }

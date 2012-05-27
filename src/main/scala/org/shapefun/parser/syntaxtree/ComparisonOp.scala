@@ -1,20 +1,25 @@
 package org.shapefun.parser.syntaxtree
 
-import org.shapefun.parser.Context
+import org.shapefun.parser.{BoolKind, NumKind, Kind, Context}
+
 
 /**
  *
  */
 case class ComparisonOp(a: Expr, op1: Symbol, b: Expr, op2: Symbol = null, c: Expr = null) extends Expr {
 
-  override def checkTypes() {
-    a.checkTypes()
-    b.checkTypes()
-    if (c != null) c.checkTypes()
+  val allowedOps = Set('>, '>=, '<, '<=)
 
-    ensureIsAssignable(Num.Class, a)
-    ensureIsAssignable(Num.Class, b)
-    if (c != null) ensureIsAssignable(Num.Class, c)
+  protected def doCalculateTypes(staticContext: StaticContext): Kind = {
+    ensureExprIsAssignableTo(NumKind, a, staticContext)
+    ensureExprIsAssignableTo(NumKind, b, staticContext)
+    if (c != null) ensureExprIsAssignableTo(NumKind, c, staticContext)
+
+    if (!allowedOps.contains(op1)) reportTypeError("Operator '"+op1.name+"' is not allowed", this, staticContext)
+    if (op2 != null && !allowedOps.contains(op2)) reportTypeError("Operator '"+op1.name+"' is not allowed", this, staticContext)
+    if (op2 != null && c == null) reportTypeError("Second operator was present, but third operand was missing", this, staticContext)
+
+    BoolKind
   }
 
   def returnType() = Bool.Class
@@ -22,9 +27,9 @@ case class ComparisonOp(a: Expr, op1: Symbol, b: Expr, op2: Symbol = null, c: Ex
   def calculate(context: Context): AnyRef = {
     val aVal = Double.unbox(a.calculate(context))
     val bVal = Double.unbox(b.calculate(context))
-    val cVal = if (c != null) Double.unbox(c.calculate(context)) else 0
 
     if (op2 != null) {
+      val cVal = Double.unbox(c.calculate(context))
       Boolean.box(compare(aVal, op1, bVal) && compare(bVal, op2, cVal))
     }
     else {
@@ -39,11 +44,6 @@ case class ComparisonOp(a: Expr, op1: Symbol, b: Expr, op2: Symbol = null, c: Ex
       case '>=  =>  v1 >= v2 - Num.Epsilon
       case '<   =>  v1 <  v2 - Num.Epsilon
       case '<=  =>  v1 <= v2 + Num.Epsilon
-      case '==  =>  v1 >  v2 - Num.Epsilon &&
-                    v1 <  v2 + Num.Epsilon
-      case '!=  =>  v1 <  v2 - Num.Epsilon ||
-                    v1 >  v2 + Num.Epsilon
-      case _ => throw new Error("Unknown comparison operator '"+op.name+"'.")
     }
   }
 

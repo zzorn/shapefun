@@ -1,7 +1,7 @@
 package org.shapefun.parser.syntaxtree
 
-import org.shapefun.parser.Context
 import org.shapefun.utils.ParameterChecker
+import org.shapefun.parser.{AnyRefKind, Kind, Context}
 
 /**
  *
@@ -9,14 +9,17 @@ import org.shapefun.utils.ParameterChecker
 case class VarAssignment(identifier: Symbol, assignmentOp: Symbol, valueExpr: Expr) extends Expr {
   ParameterChecker.requireIsIdentifier(identifier, 'identifier)
 
-  def checkTypes() {
-    valueExpr.checkTypes()
-    // TODO: Get variable type from type checking context,check that value matches
-  }
+  val allowedOps = Set('=, '+=, '-=, '*=, '/=)
 
-  def returnType(): Class[_] = {
-    // TODO: Get variable type from type checking context
-    null
+  protected def doCalculateTypes(staticContext: StaticContext): Kind = {
+    // TODO: Check context, ensure var exists and is correct type
+    val varType = AnyRefKind
+
+    ensureExprIsAssignableTo(varType, valueExpr, staticContext)
+
+    if (!allowedOps.contains(assignmentOp)) reportTypeError("Assignment operator '"+assignmentOp.name+"' is not allowed", this, staticContext)
+
+    varType
   }
 
   def calculate(context: Context): AnyRef = {

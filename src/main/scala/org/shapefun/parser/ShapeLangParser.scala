@@ -11,15 +11,28 @@ import syntaxtree._
 /**
  *
  */
-class ShapeLangParser extends Parser {
+class ShapeLangParser(registeredKinds: Map[Symbol, Kind]) extends Parser {
 
-  def parse(expression: String): Expr = {
+  val defaultKinds = Map('Num -> NumKind, 'Any -> AnyRefKind, 'Bool -> BoolKind)
+
+  private def getKind(name: Symbol): Kind = {
+    defaultKinds.getOrElse(name, registeredKinds.getOrElse(name, throw new ParsingException("Unknown type '"+name.name+"'")))
+  }
+
+  def parse(expression: String, rootContext: Context): Expr = {
     val parsingResult = ReportingParseRunner(InputLine).run(expression)
-    parsingResult.result match {
-      case Some(i) => i
+    val expr = parsingResult.result match {
+      case Some(e) => e
       case None => throw new ParsingException("Invalid expression:\n" +
         ErrorUtils.printParseErrors(parsingResult))
     }
+
+    /* TODO: Implement type checking
+    // Check typing
+    // TODO: Implement multiple pass checking?  Continue until all checked or error?
+    expr.calculateTypes(rootContext.createStaticContext())
+    */
+    expr
   }
 
   def InputLine = rule { BlockContents ~ WhiteSpace ~ EOI }
@@ -47,7 +60,7 @@ class ShapeLangParser extends Parser {
   }
 
   def SimpleKind: Rule1[Kind] = rule {
-    AllowedName ~~> {s: Symbol => Kind(s)}
+    AllowedName ~~> {s: Symbol => getKind(s)}
   }
 
   def Block: Rule1[Expr] = rule {
@@ -109,10 +122,10 @@ class ShapeLangParser extends Parser {
   }
 
   def EqualityExpr: Rule1[Expr] = rule {
-    ComparisonExpr ~ EqualitySymbol ~ ComparisonExpr ~~> {(a, sym, b) => EqualityComparisonOp(a, sym, b)} |
+    ComparisonExpr ~ " ==" ~ ComparisonExpr ~~> {(a, b) => EqualityComparisonOp(a, b)} |
+    ComparisonExpr ~ " !=" ~ ComparisonExpr ~~> {(a, b) => NotEqualityComparisonOp(a, b)} |
     ComparisonExpr
   }
-  def EqualitySymbol: Rule1[Symbol] = rule { WhiteSpace ~ group("==" | "!=") ~> {s => Symbol(s)} }
 
 
   def ComparisonExpr: Rule1[Expr] = rule {
@@ -182,7 +195,7 @@ class ShapeLangParser extends Parser {
   def Call: Rule1[Expr] = rule {
     FirstCall ~ zeroOrMore(
       " ." ~ CallIdAndParams ~~>
-        {(obj: Expr, ident: Symbol, params: List[Expr]) =>
+        {(obj: Expr, ident: Symbol, params: List[CallArg]) =>
           CallExpr(Some(obj), ident, params).asInstanceOf[Expr]}
     )
   }
@@ -191,8 +204,13 @@ class ShapeLangParser extends Parser {
       {(obj, ident, params) =>
         CallExpr(obj, ident, params)}
   }
-  def CallIdAndParams: Rule2[Symbol, List[Expr]] = rule { Identifier ~ " (" ~ zeroOrMore(CallParam, separator=" ,") ~ " )"  }
-  def CallParam: Rule1[Expr] = rule { Expression }
+  def CallIdAndParams: Rule2[Symbol, List[CallArg]] = rule {
+    Identifier ~ " (" ~ zeroOrMore(CallParam, separator=" ,") ~ " )"
+  }
+  def CallParam: Rule1[CallArg] = rule {
+    AllowedName ~ " =" ~ Expression ~~> {(name, expr) => CallArg(name, expr)} |
+    Expression ~~> {expr => CallArg(null, expr)}
+  }
 
   def AllowedName: Rule1[Symbol] = Identifier // TODO: Exclude keywords
   def Identifier: Rule1[Symbol] = rule { WhiteSpace ~ group(LetterOrUnderscore ~ zeroOrMore(LetterOrUnderscore | Digit)) ~> {s => Symbol(s) }  }
