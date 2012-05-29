@@ -607,8 +607,6 @@ class ParserTest extends FunSuite {
 
   // TODO: Flesh out math lib, e.g. lerps, tweening, random.
 
-  // TODO: Named arguments in calls
-
   // TODO: While
 
   // TODO: Function parameters, closures?
