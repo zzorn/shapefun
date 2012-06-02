@@ -1,0 +1,13 @@
+
+
+var mesh = Mesh()
+var v1 = mesh.addVertex(Vec(0,0,0))
+var v2 = mesh.addVertex(Vec(0,0,1))
+var v3 = mesh.addVertex(Vec(1,0,1))
+var v4 = mesh.addVertex(Vec(1,0,0))
+mesh.addQuad(v1, v2, v3, v4)
+
+
+Geom(mesh, randomColor())
+
+
