@@ -81,7 +81,7 @@ case class CallExpr(hostObj: Option[Expr], identifier: Symbol, arguments: List[C
       callArgs += name -> value
     }
 
-    callArgs += 'self -> hostValue
+    callArgs += CallExpr.SelfParamName -> hostValue
 
     callArgs
   }
@@ -89,3 +89,7 @@ case class CallExpr(hostObj: Option[Expr], identifier: Symbol, arguments: List[C
 
 
 case class CallArg(var name: Symbol, expr: Expr)
+
+object CallExpr {
+  val SelfParamName = 'self
+}

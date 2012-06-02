@@ -49,4 +49,3 @@ object AnyRefKind extends Kind {
   val name = 'AnyRef
   def isAssignableFrom(otherKind: Kind): Boolean = otherKind != UnitKind
 }
-

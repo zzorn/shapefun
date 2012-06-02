@@ -1,6 +1,5 @@
 package org.shapefun.view
 
-import java.io.File
 
 import com.jme3.app.SimpleApplication
 import com.jme3.system.AppSettings
@@ -8,14 +7,18 @@ import com.jme3.asset.plugins.FileLocator
 import com.jme3.material.Material
 import com.jme3.math.{ColorRGBA, Vector3f}
 import com.jme3.asset.AssetManager
-import com.jme3.scene.{Spatial, Geometry}
 import com.jme3.scene.shape.Box
 import com.jme3.app.state.ScreenshotAppState
-import com.jme3.input.controls.KeyTrigger
 import com.jme3.input.KeyInput
 
 import org.shapefun.{ModelLoader, Model}
-import org.shapefun.utils.{FileChangeMonitor, Logging}
+import com.jme3.input.controls.{ActionListener, KeyTrigger}
+import org.shapefun.utils.{MeshBuilder, FileChangeMonitor, Logging}
+import java.io.File
+import org.shapefun.parser.{ContextImpl, JavaKind, ShapeLangParser}
+import org.shapefun.parser.defs.ExternalFunDef
+import org.shapefun.parser.syntaxtree.Expr
+import com.jme3.scene.{Mesh, Spatial, Geometry}
 
 /**
  * Live preview of procedural shape defined in a config file.
@@ -39,9 +42,12 @@ object ShapeViewer extends SimpleApplication with Logging {
   private var chaseCamera: RotationCameraControl = null
 
   private var modelLoader: ModelLoader = null
-  private val modelSource: File = new File("assets/shapes/TestShape.yaml")
+  private val modelSource: File = new File("assets/shapes/TestShape.funlang")
   private var modelSourcesToRead: File = null
   private var fileChangeMonitor: FileChangeMonitor = null
+
+  private val parser = new ShapeLangParser(Map('Mesh -> JavaKind(classOf[MeshBuilder]) ))
+
 
   def main(args: Array[String]) {
     Logging.initializeLogging()
@@ -74,7 +80,10 @@ object ShapeViewer extends SimpleApplication with Logging {
     }
   }
 
-  private def getFileToRead(): File = {
+  /**
+   * @return changed file, null if not changed.
+   */
+  private def getFileToRead: File = {
     synchronized {
       val file = modelSourcesToRead
       modelSourcesToRead = null
@@ -82,13 +91,13 @@ object ShapeViewer extends SimpleApplication with Logging {
     }
   }
 
-  def updateModel(modelFile: File) {
+  def updateModel(file: File) {
     if (shape != null) {
       shape.removeControl(chaseCamera)
       rootNode.detachChild(shape)
     }
 
-    shape = createModel(assetManager, modelFile);
+    shape = createModel(assetManager, file)
 
     if (shape != null) {
       rootNode.attachChild(shape)
@@ -136,7 +145,7 @@ object ShapeViewer extends SimpleApplication with Logging {
 
 
   override def simpleUpdate(tpf: Float) {
-    val file = getFileToRead()
+    val file = getFileToRead
     if (file != null) {
       updateModel(file)
     }
@@ -145,12 +154,70 @@ object ShapeViewer extends SimpleApplication with Logging {
   }
 
   private def createModel(assetManager: AssetManager, modelFile: File): Spatial = {
+    println("create model")
+
+    println("  create context")
+    val rootContext: ContextImpl = new ContextImpl()
+
+    println("  Add mesh constr")
+    rootContext.addFun0('Mesh) { () => new MeshBuilder() }
+    println("  Add rand color")
+    rootContext.addFun0('randomColor) { () => ColorRGBA.randomColor() }
+    println("  Add rand vec")
+    rootContext.addFun3('Vec) { (x: java.lang.Double, y: java.lang.Double, z: java.lang.Double) =>
+      new Vector3f(
+        Double.unbox(x).toFloat,
+        Double.unbox(y).toFloat,
+        Double.unbox(z).toFloat
+      )
+    }
+
+    println("  Add geom")
+    rootContext.addFun2('Geom) { (mesh: MeshBuilder, color: ColorRGBA) =>
+      println("addGeom")
+
+      val createdMesh: Mesh = mesh.createMesh()
+
+      val mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md")
+      mat.setColor("Color", color)
+
+      val geometry: Geometry = new Geometry("mesh", createdMesh)
+      geometry.setMaterial(mat)
+      geometry
+    }
+
+    rootContext.addExtFun1(classOf[MeshBuilder], 'addVertex) { (m: MeshBuilder, pos: Vector3f) =>
+      println("addVertex")
+      Integer.valueOf(m.addVertex(pos))
+    }
+
+    rootContext.addExtFun4(classOf[MeshBuilder], 'addQuad) { (m: MeshBuilder,
+                                        i0: java.lang.Integer,
+                                        i1: java.lang.Integer,
+                                        i2: java.lang.Integer,
+                                        i3: java.lang.Integer) =>
+      println("addQuad")
+      m.addQuad(i0, i1, i2, i3)
+      m
+    }
+
+    println("  Parse file")
+    val expr: Expr = parser.parseFile(modelFile, rootContext)
+
+    println("  Parse calculate")
+    val result: AnyRef = expr.calculate(rootContext)
+
+    println("  ready")
+    result.asInstanceOf[Spatial]
+
+    /*
     model = loadModel(modelFile)
     if (model != null) model.createSpatial(assetManager)
-    else null
+    else null*/
   }
 
   private def loadModel(modelFile: File): Model = {
+    /*
     val newTomes: Map[String, Model] = modelLoader.loadModels(modelFile)
     tomes ++= newTomes
 
@@ -159,25 +226,25 @@ object ShapeViewer extends SimpleApplication with Logging {
 
     // TODO: Detect removed tomes
 
+    */
     //new Cube()
+    null
   }
 
   private def setupKeys() {
-    inputManager.addMapping("ReloadModel", new KeyTrigger(KeyInput.KEY_SPACE));
+    inputManager.addMapping("ReloadModel", new KeyTrigger(KeyInput.KEY_SPACE))
 
-    /*
     inputManager.addListener(new ActionListener {
-      def onAction(name: String, isPressed: Boolean, tpf: Float) { if (!isPressed) updateModel() }
+      def onAction(name: String, isPressed: Boolean, tpf: Float) { if (!isPressed) updateModel(modelSource) }
     }, "ReloadModel")
-    */
   }
 
 
   private def makeTestBox(pos: Vector3f = Vector3f.ZERO): Geometry = {
     val box = new Geometry("box", new Box(1, 1, 1))
     box.setLocalTranslation(pos)
-    val mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-    mat.setColor("Color", ColorRGBA.randomColor());
+    val mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md")
+    mat.setColor("Color", ColorRGBA.randomColor())
     box.setMaterial(mat)
     box
   }

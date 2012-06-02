@@ -6,12 +6,14 @@ import org.parboiled.scala._
 import org.parboiled.errors.{ErrorUtils, ParsingException}
 import java.lang.String
 import syntaxtree._
+import java.io.{BufferedReader, StringWriter, FileReader, File}
+import org.shapefun.utils.FileUtils
 
 
 /**
  *
  */
-class ShapeLangParser(registeredKinds: Map[Symbol, Kind]) extends Parser {
+class ShapeLangParser(registeredKinds: Map[Symbol, Kind] = Map()) extends Parser {
 
   val defaultKinds = Map('Num -> NumKind, 'Any -> AnyRefKind, 'Bool -> BoolKind)
 
@@ -19,7 +21,13 @@ class ShapeLangParser(registeredKinds: Map[Symbol, Kind]) extends Parser {
     defaultKinds.getOrElse(name, registeredKinds.getOrElse(name, throw new ParsingException("Unknown type '"+name.name+"'")))
   }
 
-  def parse(expression: String, rootContext: Context): Expr = {
+
+  def parseFile(expressionFile: File, rootContext: Context = new ContextImpl()): Expr = {
+    parseString(FileUtils.readFile(expressionFile), rootContext)
+  }
+
+
+  def parseString(expression: String, rootContext: Context = new ContextImpl()): Expr = {
     val parsingResult = ReportingParseRunner(InputLine).run(expression)
     val expr = parsingResult.result match {
       case Some(e) => e

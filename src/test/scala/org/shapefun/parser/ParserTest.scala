@@ -631,7 +631,7 @@ class ParserTest extends FunSuite {
 
   def shouldParseTo(expression: String, expected: Double, context: Context = ContextImpl(), definedKinds: Map[Symbol, Kind] = Map()) {
     val parser = new ShapeLangParser(definedKinds)
-    val expr: Expr = parser.parse(expression, context)
+    val expr: Expr = parser.parseString(expression, context)
     val result: Any = expr.calculate(context)
 
 
@@ -651,7 +651,7 @@ class ParserTest extends FunSuite {
 
   def shouldParseToObj(expression: String, expected: AnyRef, context: Context = ContextImpl(), definedKinds: Map[Symbol, Kind] = Map()) {
     val parser = new ShapeLangParser(definedKinds)
-    val expr: Expr = parser.parse(expression, context)
+    val expr: Expr = parser.parseString(expression, context)
     val result: Any = expr.calculate(context)
 
     // Print some debugging help on fail
@@ -662,12 +662,12 @@ class ParserTest extends FunSuite {
 
   def shouldNotParse(expression: String, definedKinds: Map[Symbol, Kind] = Map()) {
     val parser = new ShapeLangParser(definedKinds)
-    intercept[ParsingException](parser.parse(expression, new ContextImpl()))
+    intercept[ParsingException](parser.parseString(expression, new ContextImpl()))
   }
 
   def shouldNotCalculate(expression: String, context: Context = ContextImpl(), definedKinds: Map[Symbol, Kind] = Map()) {
     val parser = new ShapeLangParser(definedKinds)
-    val expr: Expr = parser.parse(expression, context)
+    val expr: Expr = parser.parseString(expression, context)
     intercept[Exception](expr.calculate(context))
   }
 
