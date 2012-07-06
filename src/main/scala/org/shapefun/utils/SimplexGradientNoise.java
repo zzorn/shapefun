@@ -205,9 +205,10 @@ public final class SimplexGradientNoise {
             dnoise_dx[0] = dx;
         }
         // The maximum value of this noise is 8*(3/4)^4 = 2.53125
-        // A factor of 0.395 would scale to fit exactly within [-1,1], but
+        // A factor of 0.395 would scale to fit (almost) exactly within [-1,1], but
         // to better match classic Perlin noise, we scale it down some more.
-        return 0.25 * (n0 + n1);
+        // return 0.25 * (n0 + n1);
+        return 0.395 * (n0 + n1); // No need to stay compatible to classic Perlin noise, better to have values over whole -1 to 1 range.
     }
 
     /**
