@@ -65,20 +65,27 @@ class MeshBuilder {
    * Creates a triangle.
    * Parameters are indexes of vertexes making up the triangle corners, in counter clockwise order.
    */
-  def addTriangle(index0: Int, index1: Int, index2: Int) {
+  def addTriangle(index0: Int, index1: Int, index2: Int, twoSided: Boolean = false) {
     indices.add(index0)
     indices.add(index1)
     indices.add(index2)
     nextIndex += 3
+
+    if (twoSided) {
+      indices.add(index2)
+      indices.add(index1)
+      indices.add(index0)
+      nextIndex += 3
+    }
   }
 
   /**
    * Creates a quad.
    * Parameters are indexes of vertexes making up the quad corners, in counter clockwise order.
    */
-  def addQuad(index0: Int, index1: Int, index2: Int, index3: Int) {
-    addTriangle(index0, index1, index2)
-    addTriangle(index2, index3, index0)
+  def addQuad(index0: Int, index1: Int, index2: Int, index3: Int, twoSided: Boolean = false) {
+    addTriangle(index0, index1, index2, twoSided)
+    addTriangle(index2, index3, index0, twoSided)
   }
 
   /*

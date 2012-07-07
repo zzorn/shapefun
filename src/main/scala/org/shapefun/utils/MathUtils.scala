@@ -7,6 +7,8 @@ object MathUtils {
    */
   val Tau = 2 * math.Pi
 
+  val TauFloat = Tau.toFloat
+
   /**
    * @return linear interpolation of a and b, using t.
    */
@@ -18,9 +20,17 @@ object MathUtils {
    * @return linear mapping of value from source range to destination range.
    */
   def map(value: Double, sourceStart: Double, sourceEnd: Double, destinationStart: Double, destinationEnd: Double): Double = {
-    val relativePos = if (sourceStart == sourceEnd) 0.5 else (value - sourceStart) / (sourceEnd - sourceStart)
-    mix(destinationStart, destinationEnd, relativePos)
+    mix(destinationStart, destinationEnd, relativePos(value, sourceStart, sourceEnd))
   }
+
+  /**
+   * @return 0 if value is start, 1 if value is end, and a relative position between them otherwise.
+   */
+  def relativePos(value: Double, start: Double, end: Double): Double = {
+    if (start == end) 0.5
+    else (value - start) / (end - start)
+  }
+
 
   /**
    * Hermite interpolation between two values.
