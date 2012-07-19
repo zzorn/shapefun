@@ -19,14 +19,13 @@ import org.shapefun.parser.{ContextImpl, JavaKind, ShapeLangParser}
 import org.shapefun.parser.defs.ExternalFunDef
 import org.shapefun.parser.syntaxtree.Expr
 import com.jme3.scene.{LightNode, Mesh, Spatial, Geometry}
-import org.shapefun.shapes.Plane
+import org.shapefun.shapes.{MultiShape, Plane}
 import com.jme3.light.DirectionalLight
 import org.shapefun.functions._
 import org.shapefun.functions.NoiseFun
 import org.shapefun.functions.ConstantFun
 import org.shapefun.functions.WaveMixFun
 import org.shapefun.functions.LinearFun
-import org.shapefun.shapes.Plane
 
 /**
  * Live preview of procedural shape defined in a config file.
@@ -117,7 +116,7 @@ object ShapeViewer extends SimpleApplication with Logging {
 
 
     // Create test model
-    val plane = new Plane(
+    val plane1 = new Plane(
       segments = 12,
       columns = 3,
       xPath = LinearFun(-20, 20),
@@ -129,9 +128,17 @@ object ShapeViewer extends SimpleApplication with Logging {
       scale = LinearFun(10, 1),
       doubleSided = true,
       turnInPathDirection = false )
+    plane1.setPosition(new Vector3f(0, 10, 0))
+
+    val plane2 = new Plane()
+    plane2.setPosition(new Vector3f(0, 0, 0))
+
+    val plant = MultiShape()
+    plant.addShape(plane1)
+    plant.addShape(plane2)
 
     val builder = new ModelBuilder()
-    plane.buildModel(builder)
+    plant.buildModel(builder)
     setShape(builder.getModel(assetManager))
   }
 

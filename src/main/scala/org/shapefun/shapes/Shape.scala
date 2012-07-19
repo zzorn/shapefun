@@ -15,4 +15,12 @@ trait Shape {
     // TODO: Implement in each shape.
   }
 
+  def setPosition(pos: Vector3f) {
+    transformation.setTranslation(pos)
+  }
+
+  def getPosition: Vector3f = {
+    transformation.toTranslationVector
+  }
+
 }
